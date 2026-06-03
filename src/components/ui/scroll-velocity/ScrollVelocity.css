@@ -1,0 +1,63 @@
+.parallax {
+  position: relative;
+  overflow: hidden;
+}
+
+.scroller {
+  display: flex;
+  white-space: nowrap;
+  text-align: center;
+  font-family: inherit;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.scroller span {
+  flex-shrink: 0;
+}
+
+.scroll-marquee-partnership .scroller {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1.25rem;
+}
+
+.scroll-marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-inline: 2.5rem;
+}
+
+.scroll-marquee-item img {
+  height: 1.25rem;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.95;
+}
+
+@media (min-width: 768px) {
+  .scroller {
+    font-size: 1.375rem;
+    line-height: 1.375rem;
+  }
+
+  .scroll-marquee-partnership .scroller {
+    font-size: 1.0625rem;
+    line-height: 1.375rem;
+  }
+
+  .scroll-marquee-item {
+    gap: 1.75rem;
+    padding-inline: 4rem;
+  }
+
+  .scroll-marquee-item img {
+    height: 1.5rem;
+  }
+}

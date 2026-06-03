@@ -159,6 +159,10 @@
     "features": {
       "chip": "Features"
     },
+    "scrollMarquee": {
+      "aria": "Scrolling highlights",
+      "partnership": "In partnership with Zain Telecommunications"
+    },
     "cards": {
       "oneTitle": "Discover Sudanese shows",
       "oneBody": "Browse by category, explore trending episodes, and jump into latest, most liked, and most viewed podcasts.",

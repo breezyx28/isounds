@@ -17,15 +17,7 @@ if (import.meta.env.DEV && "serviceWorker" in navigator) {
 
 if (import.meta.env.PROD) {
   window.addEventListener("load", () => {
-    void import("virtual:pwa-register").then(({ registerSW }) => {
-      const idleCallback =
-        "requestIdleCallback" in window ? window.requestIdleCallback.bind(window) : undefined;
-      if (idleCallback) {
-        idleCallback(() => registerSW({ immediate: false }));
-        return;
-      }
-      globalThis.setTimeout(() => registerSW({ immediate: false }), 1200);
-    });
+    void import("./registerPwa").then(({ registerPwa }) => registerPwa());
   });
 }
 
