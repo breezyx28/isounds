@@ -1,0 +1,11 @@
+{
+  "views": "مشاهدة",
+  "likes": "إعجاب",
+  "duration": "المدة",
+  "video": "فيديو",
+  "audio": "صوت",
+  "detail": {
+    "relatedSidebar": "حلقات ذات صلة",
+    "relatedMore": "المزيد من هذا النوع"
+  }
+}

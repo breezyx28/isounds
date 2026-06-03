@@ -1,0 +1,20 @@
+[Unit]
+Description=iSounds Bun server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/isounds/website
+Environment=NODE_ENV=production
+EnvironmentFile=/opt/isounds/website/.env
+ExecStart=/usr/bin/bun run serve
+Restart=always
+RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

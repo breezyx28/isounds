@@ -1,0 +1,10 @@
+/**
+ * iSounds global stylesheet entry (imported in main.tsx)
+ *
+ * Do not add component styles here — use:
+ *   src/styles/custom.css   → app-wide reusable classes (is-*)
+ *   src/styles/tailwind.css → Tailwind layers + base app resets
+ */
+
+@import "./styles/tailwind.css";
+@import "./styles/custom.css";

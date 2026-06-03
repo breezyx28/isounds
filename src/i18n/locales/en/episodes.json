@@ -1,0 +1,11 @@
+{
+  "views": "views",
+  "likes": "likes",
+  "duration": "Duration",
+  "video": "Video",
+  "audio": "Audio",
+  "detail": {
+    "relatedSidebar": "Related episodes",
+    "relatedMore": "More like this"
+  }
+}

@@ -1,0 +1,302 @@
+{
+  "nav": {
+    "landing": "Landing",
+    "home": "Home",
+    "browse": "Browse",
+    "categories": "Categories",
+    "explore": "Explore",
+    "library": "Library",
+    "saved": "Saved",
+    "more": "More",
+    "subscribe": "Subscribe",
+    "about": "About iSounds",
+    "help": "Help",
+    "contact": "Contact",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "actions": {
+    "viewAll": "View all",
+    "tryAgain": "Try again",
+    "backHome": "Back to home"
+  },
+  "aria": {
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation",
+    "languageToggle": "Language switcher",
+    "pagination": "Pagination",
+    "dialogClose": "Close dialog",
+    "carouselPrevious": "Previous slide",
+    "carouselNext": "Next slide"
+  },
+  "sections": {
+    "featured": "Featured this week",
+    "latest": "Latest",
+    "liked": "Most liked",
+    "viewed": "Most viewed",
+    "categories": "All categories"
+  },
+  "category": {
+    "fallbackTitle": "Category {{id}}",
+    "episodeCount": "{{count}} episodes"
+  },
+  "empty": {
+    "episodes": "No episodes yet",
+    "categories": "No categories found"
+  },
+  "errors": {
+    "loadFailed": "Failed to load content"
+  },
+  "footer": {
+    "brandTitle": "Brand Statement",
+    "brandBody": "iSounds is Sudan's home for podcasts and video shows — local voices, curated discovery, and premium listening in partnership with Zain.",
+    "navigationTitle": "Navigation",
+    "discoverTitle": "Discover",
+    "joinTitle": "Join iSounds",
+    "emailPlaceholder": "type your email",
+    "joinBody": "Stay close to new episodes, featured shows, and releases from Sudanese creators.",
+    "copyright": "© {{year}} iSounds. Built for listeners who love Sudanese audio.",
+    "tagline": "Your home for Sudanese podcasts.",
+    "zainNote": "In partnership with Zain Sudan",
+    "social": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    }
+  },
+  "stub": {
+    "episodeTitle": "Episode details",
+    "episodeBody": "Full player coming in the next phase.",
+    "explore": "Advanced search coming soon",
+    "library": "Library for subscribers — coming soon",
+    "subscribe": "Subscribe page coming soon"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist."
+  },
+  "language": {
+    "ar": "عربي",
+    "en": "English"
+  },
+  "theme": {
+    "dark": "Dark mode",
+    "light": "Light mode"
+  },
+  "auth": {
+    "checking": "Checking subscription...",
+    "login": "Login",
+    "subscribedBadge": "Subscribed",
+    "expiredBanner": "Your subscription appears expired. Please subscribe again.",
+    "subscribeTitle": "Subscribe to iSounds",
+    "subscribeBody": "Enjoy Sudan's premium podcast and video content in partnership with Zain.",
+    "priceNote": "Charged through your Zain bill",
+    "subscribeNow": "Subscribe now",
+    "alreadySubscribed": "I'm already subscribed",
+    "checkSuccess": "Subscription verified successfully.",
+    "checkFailed": "Could not verify subscription.",
+    "noMsisdn": "No phone number found. Open iSounds from your Zain redirect link or login manually.",
+    "loginTitle": "Login with phone",
+    "loginBody": "Carrier redirect users can log in automatically with msisdn. You can also login directly below.",
+    "phoneLabel": "Phone number",
+    "loginAction": "Login",
+    "loginSuccess": "Logged in successfully.",
+    "loginFailed": "Login failed. Please check your number.",
+    "welcomeTitle": "Welcome to iSounds",
+    "welcomeBody": "Your Zain subscription is active.",
+    "cancelSubscription": "Cancel subscription",
+    "cancelStep1Title": "Are you sure?",
+    "cancelStep1Body": "You are about to cancel your current iSounds subscription.",
+    "cancelStep2Title": "Final confirmation",
+    "cancelStep2Body": "Confirm cancellation now. You can subscribe again at any time.",
+    "cancelBack": "Back",
+    "cancelContinue": "Continue",
+    "cancelConfirm": "Yes, cancel my subscription",
+    "cancelFailed": "Could not cancel subscription. Please try again.",
+    "cancelSuccess": "Your subscription was cancelled. You can subscribe again anytime.",
+    "subscriptionRequired": "An active subscription is required to access this feature.",
+    "likeRequiresSubscription": "Subscribe to like episodes.",
+    "listenRequiresSubscription": "Subscribe to listen to this episode.",
+    "ratingRequiresSubscription": "Subscribe to rate episodes."
+  },
+  "landing": {
+    "eyebrow": "Sudan's Audio Home",
+    "title": "Your home for Sudanese podcasts and shows.",
+    "subtitle": "Discover the latest audio and video episodes, organized by topic and crafted for Arabic-first listeners.",
+    "ctaPrimary": "Explore episodes",
+    "ctaSecondary": "Subscribe now",
+    "hero": {
+      "brand": "iSounds",
+      "headline": "Your home for Sudanese podcasts.",
+      "subcopy": "Subscribe to our podcast and get access to exclusive content.",
+      "sponsoredBy": "Sponsored by",
+      "developedBy": "Developed by",
+      "partners": {
+        "zain": "Zain",
+        "oxygen": "Oxygen Arabia"
+      },
+      "cards": {
+        "audioTitle": "Sudanese audio",
+        "audioDescription": "Podcasts and stories on the go",
+        "videoTitle": "Video shows",
+        "videoDescription": "Watch episodes when available"
+      },
+      "tallSlides": {
+        "mic1": {
+          "title": "Studio sessions",
+          "description": "Recorded with Sudanese creators"
+        },
+        "mic2": {
+          "title": "On the mic",
+          "description": "Voices that shape the culture"
+        },
+        "partner": {
+          "title": "Powered by Zain",
+          "description": "Premium listening for subscribers"
+        }
+      }
+    },
+    "features": {
+      "chip": "Features"
+    },
+    "cards": {
+      "oneTitle": "Discover Sudanese shows",
+      "oneBody": "Browse by category, explore trending episodes, and jump into latest, most liked, and most viewed podcasts.",
+      "twoTitle": "Listen & watch seamlessly",
+      "twoBody": "Stream audio in the built-in player, resume where you left off, and enjoy video episodes when available.",
+      "threeTitle": "Subscribe with Zain",
+      "threeBody": "Unlock premium episodes through Zain Sudan — charged on your line and verified in a few taps."
+    },
+    "categories": {
+      "chip": "Categories",
+      "title": "Explore by category",
+      "intro": "From culture and storytelling to news and entertainment — pick a lane and dive into shows made for Sudanese listeners.",
+      "podcastsLabel": "podcasts",
+      "cardAria": "{{name}}, {{count}} podcasts",
+      "labels": {
+        "womenIssues": "Women's Issues",
+        "arts": "Arts",
+        "politicsEconomy": "Politics & Economy",
+        "culturalReviews": "Cultural Reviews",
+        "sports": "Sports"
+      },
+      "topicCards": {
+        "latest": "Fresh episodes added recently",
+        "liked": "Most liked picks from listeners",
+        "viewed": "Most watched and replayed episodes",
+        "filler": "Discover more in Explore and find your next favorite show."
+      },
+      "posters": {
+        "interleave-0": {
+          "chip": "Library",
+          "value": "{{count}}+",
+          "label": "shows across every category"
+        },
+        "interleave-1": {
+          "chip": "Tip",
+          "headline": "Resume where you left off",
+          "body": "Jump back into the latest episode in any category without losing your place."
+        },
+        "fill-0": {
+          "chip": "Always on",
+          "value": "24/7",
+          "label": "stream anytime, anywhere"
+        },
+        "fill-1": {
+          "chip": "Tip",
+          "headline": "Discover Sudanese voices",
+          "body": "Fresh episodes land weekly — start with what is trending in your favorite lane."
+        }
+      }
+    },
+    "aboutBento": {
+      "chip": "About iSounds",
+      "intro": "A Sudan-focused home for podcasts, video shows, and the stories that matter locally.",
+      "cards": {
+        "local": {
+          "label": "Sudan",
+          "title": "Sudanese voices",
+          "description": "Spotlight local creators, stories, and spoken culture in one dedicated platform."
+        },
+        "mission": {
+          "label": "Mission",
+          "title": "Built to be heard",
+          "description": "Make high-quality Sudanese audio and video easy to discover, enjoy, and share."
+        },
+        "discovery": {
+          "label": "Discover",
+          "title": "Curated discovery",
+          "description": "Browse categories plus latest, most viewed, and most liked episode rails."
+        },
+        "listen": {
+          "label": "Listen",
+          "title": "Play & resume",
+          "description": "Stream in the built-in player, pick up where you left off, and watch video episodes."
+        },
+        "zain": {
+          "label": "Zain",
+          "title": "Subscribe with Zain",
+          "description": "Unlock premium shows through Zain Sudan — billed on your line in a few taps."
+        },
+        "language": {
+          "label": "Bilingual",
+          "title": "Arabic-first",
+          "description": "Designed for Arabic listeners with seamless English when you need it."
+        }
+      }
+    }
+  },
+  "about": {
+    "title": "About iSounds",
+    "intro": "iSounds is a Sudan-focused audio and video portal built to spotlight local voices, stories, and creators.",
+    "missionTitle": "Our mission",
+    "missionBody": "Make high-quality Sudanese spoken content easy to discover, enjoy, and share across mobile and web.",
+    "whatYouGetTitle": "What you get",
+    "points": {
+      "discovery": "Fresh episode rails across latest, most viewed, and most liked.",
+      "personalized": "Personal tools like search history, ratings, and continue listening.",
+      "subscription": "Subscriber-only premium playback in partnership with Zain."
+    }
+  },
+  "help": {
+    "title": "Help & FAQ",
+    "intro": "Find quick answers about subscriptions, playback, and account access.",
+    "contactPrompt": "Need more help?",
+    "faq": {
+      "subscription": {
+        "q": "How do I subscribe to iSounds?",
+        "a": "Use the Subscribe button and complete the flow through Zain. Once active, your account unlocks premium playback."
+      },
+      "playback": {
+        "q": "Why can't I play some episodes?",
+        "a": "Some content is for active subscribers only. If you are subscribed, try refreshing your session or checking your subscription status."
+      },
+      "account": {
+        "q": "How do I log in again?",
+        "a": "Open the login page and enter your phone number, or return through your carrier redirect link to restore access."
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "intro": "By using iSounds, you agree to these terms and all applicable carrier billing rules.",
+    "usageTitle": "Usage",
+    "usageBody": "Use iSounds for personal, non-commercial listening and viewing. Misuse, unauthorized scraping, or abusive behavior may lead to access restrictions.",
+    "subscriptionTitle": "Subscription and billing",
+    "subscriptionBody": "Subscriber content requires an active plan processed through Zain. Charges, renewal, and cancellation are governed by your provider terms."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "We handle only the data needed to deliver playback, subscription checks, and product improvements.",
+    "dataTitle": "What we collect",
+    "dataBody": "This may include account/session identifiers, playback activity, search history, ratings, and support submissions.",
+    "rightsTitle": "Your choices",
+    "rightsBody": "You can request support through the contact page and manage subscription state through available account actions."
+  },
+  "pwa": {
+    "installTitle": "Install iSounds on your home screen",
+    "installBody": "Faster launch, offline access, and a full app-like experience.",
+    "installAction": "Install",
+    "dismissAction": "Not now"
+  }
+}

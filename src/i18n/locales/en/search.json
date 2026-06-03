@@ -1,0 +1,23 @@
+{
+  "title": "Explore",
+  "placeholder": "Search episodes",
+  "clear": "Clear",
+  "deleteHistoryItem": "Delete history item",
+  "clearHistory": "Clear all history",
+  "gridView": "Grid view",
+  "listView": "List view",
+  "filters": "Filters",
+  "category": "Category",
+  "allCategories": "All categories",
+  "sortBy": "Sort by",
+  "latest": "Latest",
+  "liked": "Most liked",
+  "viewed": "Most viewed",
+  "durationMin": "Min (min)",
+  "durationMax": "Max (min)",
+  "fromDate": "From",
+  "toDate": "To",
+  "resultsFor": "{{count}} results for \"{{q}}\"",
+  "defaultResults": "Latest results",
+  "empty": "No results found."
+}

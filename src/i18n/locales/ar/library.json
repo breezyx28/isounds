@@ -1,0 +1,60 @@
+{
+  "title": "المكتبة",
+  "tabs": {
+    "liked": "الحلقات المعجب بها",
+    "saved": "المحفوظات",
+    "listening": "أكمل الاستماع",
+    "history": "سجل البحث"
+  },
+  "backToLibrary": "العودة للمكتبة",
+  "empty": {
+    "liked": "لا توجد حلقات معجب بها بعد.",
+    "saved": "لا توجد حلقات محفوظة بعد.",
+    "savedHint": "احفظ الحلقات أثناء التصفح لتجدها هنا.",
+    "listening": "لا يوجد سجل استماع بعد.",
+    "history": "لا يوجد سجل بحث بعد."
+  },
+  "saved": {
+    "errorHint": "تعذر تحميل الحلقات المحفوظة."
+  },
+  "progress": "{{pos}} / {{dur}} ثانية",
+  "listeningEpisode": "حلقة رقم {{id}}",
+  "clearHistory": "مسح السجل",
+  "delete": "حذف",
+  "ratingTitle": "قيّم هذه الحلقة",
+  "rating": {
+    "aria": {
+      "star": "قيّم بـ {{value}} نجوم"
+    }
+  },
+  "reportProblem": "إبلاغ عن مشكلة",
+  "complaintTitle": "إبلاغ عن مشكلة",
+  "submitComplaint": "إرسال البلاغ",
+  "complaintTypes": {
+    "offensive": "محتوى مسيء",
+    "technical": "خطأ تقني",
+    "copyright": "حقوق ملكية",
+    "other": "أخرى"
+  },
+  "contact": {
+    "title": "تواصل ودعم",
+    "name": "الاسم",
+    "phone": "رقم الهاتف (+249...)",
+    "subjectLabel": "الموضوع",
+    "message": "الرسالة",
+    "submit": "إرسال",
+    "success": "تم إرسال الرسالة بنجاح.",
+    "failure": "فشل إرسال الرسالة.",
+    "nameError": "الاسم قصير جداً.",
+    "phoneError": "تنسيق رقم الهاتف السوداني غير صحيح.",
+    "messageError": "الرسالة يجب أن تكون بين 20 و500 حرف.",
+    "subjects": {
+      "suggestion": "اقتراح",
+      "complaint": "شكوى",
+      "technical": "مشكلة تقنية",
+      "other": "أخرى"
+    },
+    "subscribersOnlyTitle": "للمشتركين فقط",
+    "subscribersOnlyBody": "رسائل التواصل متاحة لمشتركي iSounds."
+  }
+}

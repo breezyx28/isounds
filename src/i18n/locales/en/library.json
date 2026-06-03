@@ -1,0 +1,60 @@
+{
+  "title": "Library",
+  "tabs": {
+    "liked": "Liked Episodes",
+    "saved": "Saved",
+    "listening": "Continue Listening",
+    "history": "Search History"
+  },
+  "backToLibrary": "Back to library",
+  "empty": {
+    "liked": "No liked episodes yet.",
+    "saved": "No saved podcasts yet.",
+    "savedHint": "Bookmark episodes while browsing to find them here.",
+    "listening": "No listening history yet.",
+    "history": "No search history yet."
+  },
+  "saved": {
+    "errorHint": "We could not load your saved podcasts."
+  },
+  "progress": "{{pos}} / {{dur}} sec",
+  "listeningEpisode": "Episode #{{id}}",
+  "clearHistory": "Clear history",
+  "delete": "Delete",
+  "ratingTitle": "Rate this episode",
+  "rating": {
+    "aria": {
+      "star": "Rate {{value}} stars"
+    }
+  },
+  "reportProblem": "Report a problem",
+  "complaintTitle": "Report an issue",
+  "submitComplaint": "Submit complaint",
+  "complaintTypes": {
+    "offensive": "Offensive content",
+    "technical": "Technical issue",
+    "copyright": "Copyright",
+    "other": "Other"
+  },
+  "contact": {
+    "title": "Contact & Support",
+    "name": "Name",
+    "phone": "Phone (+249...)",
+    "subjectLabel": "Subject",
+    "message": "Message",
+    "submit": "Send",
+    "success": "Message sent successfully.",
+    "failure": "Failed to send message.",
+    "nameError": "Name is too short.",
+    "phoneError": "Invalid Sudan phone format.",
+    "messageError": "Message must be 20-500 chars.",
+    "subjects": {
+      "suggestion": "Suggestion",
+      "complaint": "Complaint",
+      "technical": "Technical issue",
+      "other": "Other"
+    },
+    "subscribersOnlyTitle": "Subscribers only",
+    "subscribersOnlyBody": "Contact messages are available for subscribed iSounds users."
+  }
+}

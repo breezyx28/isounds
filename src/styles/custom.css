@@ -1,0 +1,292 @@
+/**
+ * iSounds — Global custom styles (app-wide overrides)
+ *
+ * Imported from src/index.css after Tailwind directives.
+ * Use @layer so utilities/components can be overridden predictably.
+ *
+ * Usage in JSX:
+ *   <section className="is-page">...</section>
+ *   <div className="is-card is-card--interactive">...</div>
+ *   <h1 className="is-heading-page">...</h1>
+ */
+
+@layer components {
+  .container {
+    @apply mx-auto w-full max-w-[1440px] px-4 py-8 md:px-8 md:py-10 xl:px-16;
+  }
+
+  .section-container {
+    @apply mx-auto min-h-[100dvh] w-full max-w-7xl items-center px-4 pb-8 pt-16 md:px-8 xl:px-16;
+  }
+  /* Skip link (keyboard users) */
+  .is-skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-white;
+  }
+
+  /* Consistent focus for native elements not using Button */
+  .is-focus-ring:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-bg;
+  }
+
+  /* Page shell — max width + horizontal padding */
+  .is-page {
+    @apply mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 xl:px-16;
+  }
+
+  .is-page--narrow {
+    @apply max-w-3xl;
+  }
+
+  /* Vertical rhythm between major blocks */
+  .is-section {
+    @apply my-10 md:my-14;
+  }
+
+  .is-section-header {
+    @apply mb-5 flex items-center justify-between gap-4;
+  }
+
+  .is-section-title {
+    @apply text-display-md font-semibold tracking-tight text-text;
+  }
+
+  /* Typography helpers */
+  .is-heading-page {
+    @apply text-4xl font-semibold tracking-tight text-balance text-text md:text-5xl;
+  }
+
+  .is-heading-section {
+    @apply text-heading-lg font-semibold tracking-tight text-text;
+  }
+
+  .is-text-lead {
+    @apply max-w-[65ch] text-body-lg leading-relaxed text-text-muted;
+  }
+
+  .is-text-meta {
+    @apply text-label text-text-muted [font-variant-numeric:tabular-nums];
+  }
+
+  /* Surfaces */
+  .is-card {
+    @apply rounded-xl border bg-surface p-5 shadow-soft md:p-6;
+    border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+  }
+
+  .is-card--raised {
+    @apply bg-surface-raised;
+  }
+
+  .is-card--interactive {
+    @apply transition-all duration-300 ease-out hover:-translate-y-px hover:shadow-soft active:scale-[0.98];
+  }
+
+  .is-card--dashed {
+    @apply border border-dashed shadow-none;
+    border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+    background-color: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  }
+
+  /* Glass panel (header, overlays) */
+  .is-glass {
+    @apply border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md;
+    background-color: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  }
+
+  /* Frosted glass label chip (section tags, badges) */
+  .is-glass-chip {
+    @apply inline-flex w-fit items-center justify-center rounded-full border px-5 py-2.5 text-base font-bold uppercase tracking-wide backdrop-blur-md;
+    border-color: color-mix(in srgb, white 35%, transparent);
+    background-color: color-mix(in srgb, var(--color-surface) 55%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 40%, transparent),
+      0 1px 2px color-mix(in srgb, var(--color-primary-deep) 8%, transparent);
+    color: var(--color-text);
+  }
+
+  /* Links */
+  .is-link {
+    @apply text-primary underline-offset-4 transition-colors duration-300 hover:text-primary-bright hover:underline;
+  }
+
+  .is-link-muted {
+    @apply text-text-muted underline-offset-4 transition-colors duration-300 hover:text-text hover:underline;
+  }
+
+  /* Form field block (label above input) */
+  .is-field {
+    @apply flex flex-col gap-2;
+  }
+
+  .is-input {
+    @apply w-full rounded-md border border-border bg-surface px-3 py-2 text-body-md text-text transition-colors duration-300 placeholder:text-text-disabled focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
+  }
+
+  .is-label {
+    @apply text-label text-text-muted;
+  }
+
+  .is-field-error {
+    @apply text-label text-error;
+  }
+
+  /* Horizontal scroll rail (discovery) */
+  .is-rail {
+    @apply flex gap-4 overflow-x-auto pb-2 scrollbar-none;
+    scrollbar-width: none;
+  }
+
+  /* Empty / status panels */
+  .is-empty {
+    @apply rounded-xl border border-dashed p-5 text-center text-body-md text-text-muted;
+    border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+    background-color: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  }
+
+  .is-error-panel {
+    @apply rounded-xl border p-5 text-center text-body-md text-error;
+    border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+    background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  }
+
+  /* Brand logo sizing */
+  .is-logo {
+    @apply h-8 w-auto md:h-9;
+  }
+
+  .is-logo--lg {
+    @apply h-12 w-auto md:h-14;
+  }
+
+  /* Episode detail — poster hero band */
+  .episode-hero {
+    @apply relative overflow-hidden rounded-2xl border border-border;
+    border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+    background: linear-gradient(
+      to bottom right,
+      var(--color-surface-raised),
+      var(--color-bg),
+      color-mix(in srgb, var(--color-primary) 8%, var(--color-bg))
+    );
+  }
+
+  .episode-hero__blob {
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+  }
+
+  .episode-hero__blob--start {
+    @apply -start-16 -top-16 h-72 w-72 opacity-40;
+    background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  .episode-hero__blob--end {
+    @apply -bottom-20 end-10 h-80 w-80 opacity-30;
+    background-color: color-mix(in srgb, var(--color-primary-bright) 20%, transparent);
+  }
+
+  .episode-hero__inner {
+    @apply relative z-10 flex h-full items-end gap-5 p-5 md:gap-6 md:p-8;
+  }
+
+  .episode-hero__poster {
+    @apply h-32 w-32 shrink-0 rounded-2xl border object-cover shadow-soft md:h-40 md:w-40;
+    border-color: color-mix(in srgb, var(--color-border) 60%, transparent);
+  }
+
+  .episode-hero__chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-border px-3 py-0.5 text-label text-text-muted backdrop-blur-sm;
+    background-color: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  }
+
+  .episode-hero__chip--category {
+    @apply border-transparent bg-primary text-white;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbars while keeping scroll */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Subtle page background grain (fixed, non-interactive) */
+  .is-grain {
+    @apply pointer-events-none fixed inset-0 z-[1] opacity-[0.03];
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Line clamp helpers */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Brand wordmark */
+  .font-nunito {
+    font-family: "Nunito", sans-serif;
+  }
+
+  /* Zain (Google Fonts) — Arabic body weights */
+  .zain-extralight {
+    font-family: "Zain", sans-serif;
+    font-weight: 200;
+    font-style: normal;
+  }
+
+  .zain-light {
+    font-family: "Zain", sans-serif;
+    font-weight: 300;
+    font-style: normal;
+  }
+
+  .zain-regular {
+    font-family: "Zain", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  .zain-bold {
+    font-family: "Zain", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  .zain-extrabold {
+    font-family: "Zain", sans-serif;
+    font-weight: 800;
+    font-style: normal;
+  }
+
+  .zain-black {
+    font-family: "Zain", sans-serif;
+    font-weight: 900;
+    font-style: normal;
+  }
+
+  .zain-light-italic {
+    font-family: "Zain", sans-serif;
+    font-weight: 300;
+    font-style: italic;
+  }
+
+  .zain-regular-italic {
+    font-family: "Zain", sans-serif;
+    font-weight: 400;
+    font-style: italic;
+  }
+
+}

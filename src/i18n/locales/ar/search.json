@@ -1,0 +1,23 @@
+{
+  "title": "استكشف",
+  "placeholder": "ابحث عن الحلقات",
+  "clear": "مسح",
+  "deleteHistoryItem": "حذف عنصر من السجل",
+  "clearHistory": "مسح كل السجل",
+  "gridView": "عرض شبكي",
+  "listView": "عرض قائمة",
+  "filters": "فلتر",
+  "category": "التصنيف",
+  "allCategories": "كل التصنيفات",
+  "sortBy": "الترتيب",
+  "latest": "الأحدث",
+  "liked": "الأكثر إعجاباً",
+  "viewed": "الأكثر مشاهدة",
+  "durationMin": "الحد الأدنى (دقيقة)",
+  "durationMax": "الحد الأقصى (دقيقة)",
+  "fromDate": "من",
+  "toDate": "إلى",
+  "resultsFor": "{{count}} نتيجة لـ \"{{q}}\"",
+  "defaultResults": "أحدث النتائج",
+  "empty": "لا توجد نتائج."
+}

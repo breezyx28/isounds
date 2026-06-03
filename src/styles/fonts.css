@@ -1,0 +1,19 @@
+@font-face {
+  font-family: "Guesswhat";
+  src: url("/fonts/Guesswhat-Exceptional.otf") format("opentype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-body: "DM Sans", sans-serif;
+}
+
+:root[lang="en"] {
+  --font-body: "DM Sans", sans-serif;
+}
+
+:root[lang="ar"] {
+  --font-body: "Zain", sans-serif;
+}
