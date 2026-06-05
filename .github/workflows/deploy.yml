@@ -1,0 +1,108 @@
+name: Deploy iSounds
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-isounds
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-22.04
+
+    env:
+      DEPLOY_PATH: /var/www/html/isounds
+      SERVICE_NAME: isounds
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://api.zoalcast.com/api' }}
+      VITE_PORTAL_ID: ${{ vars.VITE_PORTAL_ID || '6' }}
+      VITE_ZAIN_DSP: ${{ vars.VITE_ZAIN_DSP }}
+      SITE_URL: ${{ vars.SITE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Prepare deploy package
+        run: |
+          mkdir -p release
+          cp -R dist server package.json bun.lock release/
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.VPS_PORT || 22 }}" "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Create release directory on VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.VPS_PORT || 22 }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "sudo mkdir -p '${DEPLOY_PATH}' && sudo chown -R '${{ secrets.VPS_USER }}':'${{ secrets.VPS_USER }}' '${DEPLOY_PATH}'"
+
+      - name: Upload files
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.VPS_PORT || 22 }}" \
+            --exclude='.env' \
+            --exclude='data/' \
+            --exclude='node_modules/' \
+            release/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${DEPLOY_PATH}/"
+
+      - name: Ensure systemd service
+        run: |
+          cat > "${SERVICE_NAME}.service" <<EOF
+          [Unit]
+          Description=iSounds Bun server
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=www-data
+          WorkingDirectory=${DEPLOY_PATH}
+          Environment=NODE_ENV=production
+          EnvironmentFile=${DEPLOY_PATH}/.env
+          ExecStart=/usr/bin/bun run serve
+          Restart=always
+          RestartSec=3
+          KillSignal=SIGINT
+          TimeoutStopSec=10
+          StandardOutput=journal
+          StandardError=journal
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+          scp -i ~/.ssh/deploy_key -P "${{ secrets.VPS_PORT || 22 }}" "${SERVICE_NAME}.service" \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/${SERVICE_NAME}.service"
+
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.VPS_PORT || 22 }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "sudo mv '/tmp/${SERVICE_NAME}.service' '/etc/systemd/system/${SERVICE_NAME}.service' && \
+             sudo systemctl daemon-reload && \
+             sudo systemctl enable '${SERVICE_NAME}'"
+
+      - name: Install server dependencies and restart
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.VPS_PORT || 22 }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "export PATH=\"/root/.bun/bin:/home/${{ secrets.VPS_USER }}/.bun/bin:/usr/local/bin:/usr/bin:\$PATH\"; \
+             cd '${DEPLOY_PATH}' && \
+             bun install --production --frozen-lockfile && \
+             sudo mkdir -p '${DEPLOY_PATH}/data' && \
+             sudo chown -R www-data:www-data '${DEPLOY_PATH}/data' && \
+             sudo systemctl restart '${SERVICE_NAME}'"
