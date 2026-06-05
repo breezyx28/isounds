@@ -76,8 +76,9 @@ jobs:
           User=www-data
           WorkingDirectory=${DEPLOY_PATH}
           Environment=NODE_ENV=production
-          EnvironmentFile=${DEPLOY_PATH}/.env
-          ExecStart=/usr/bin/bun run serve
+          Environment=PATH=/root/.bun/bin:/home/${{ secrets.VPS_USER }}/.bun/bin:/usr/local/bin:/usr/bin:/bin
+          EnvironmentFile=-${DEPLOY_PATH}/.env
+          ExecStart=/usr/bin/env bun run serve
           Restart=always
           RestartSec=3
           KillSignal=SIGINT
@@ -105,4 +106,5 @@ jobs:
              bun install --production --frozen-lockfile && \
              sudo mkdir -p '${DEPLOY_PATH}/data' && \
              sudo chown -R www-data:www-data '${DEPLOY_PATH}/data' && \
-             sudo systemctl restart '${SERVICE_NAME}'"
+             sudo systemctl restart '${SERVICE_NAME}' || \
+             (sudo systemctl status '${SERVICE_NAME}' --no-pager; sudo journalctl -u '${SERVICE_NAME}' -n 80 --no-pager; exit 1)"
