@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from "react";
+import { createElement, type ElementType, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type FrostGlassChipProps<T extends ElementType = "span"> = {
@@ -13,11 +13,14 @@ export function FrostGlassChip<T extends ElementType = "span">({
   className,
   ...props
 }: FrostGlassChipProps<T>) {
-  const Comp = as ?? "span";
+  const Comp = (as ?? "span") as ElementType;
 
-  return (
-    <Comp className={cn("is-glass-chip", className)} {...props}>
-      {children}
-    </Comp>
+  return createElement(
+    Comp,
+    {
+      className: cn("is-glass-chip", className),
+      ...(props as Record<string, unknown>),
+    },
+    children,
   );
 }

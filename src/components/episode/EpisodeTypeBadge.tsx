@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { AudioLines } from "../animate-ui/icons/audio-lines";
-import { Play, VideoCircle } from "iconsax-react";
+import { VideoCircle } from "iconsax-react";
 
 interface EpisodeTypeBadgeProps {
   isVideo: boolean;

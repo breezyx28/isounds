@@ -1,10 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { Language } from "@/store/slices/uiSlice";
 
-type FlagIconProps = {
-  className?: string;
-};
-
 const FLAG_SRC: Record<Language, string> = {
   ar: "/flags/sa.svg",
   en: "/flags/us.svg",

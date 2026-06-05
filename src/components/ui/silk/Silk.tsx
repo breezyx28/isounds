@@ -175,7 +175,7 @@ export function Silk({
       frameloop="always"
       gl={{ alpha: true, antialias: true, premultipliedAlpha: true }}
       onCreated={({ gl }) => {
-        gl.setClearColor(0, 0, 0, 0);
+        gl.setClearColor(0x000000, 0);
       }}
       style={{ width: "100%", height: "100%", display: "block", background: "transparent" }}
     >

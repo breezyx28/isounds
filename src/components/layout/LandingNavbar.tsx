@@ -7,7 +7,6 @@ import { getLogoPath } from "@/lib/theme";
 import { useAppSelector } from "@/store/hooks";
 import { LanguageToggle } from "./LanguageToggle";
 import { GradientBorderButton } from "@/components/ui/buttons/gradient-border-button";
-import { Button } from "@/components/ui/button";
 import { CancelSubscriptionModal } from "@/components/shared/CancelSubscriptionModal";
 import { cn } from "@/lib/utils";
 

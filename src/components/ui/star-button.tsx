@@ -1,4 +1,4 @@
-import React, { CSSProperties, ReactNode, useEffect, useRef } from "react"
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 
