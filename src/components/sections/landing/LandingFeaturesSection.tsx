@@ -11,18 +11,18 @@ export function LandingFeaturesSection() {
 
   return (
     <section id="features" className="section-container">
-      <div className="relative flex h-[80dvh] w-full flex-col justify-center gap-6 overflow-hidden rounded-2xl bg-purple-200 p-10">
+      <div className="relative flex min-h-[720px] w-full flex-col justify-center gap-6 overflow-hidden rounded-2xl bg-purple-200 p-5 sm:p-7 md:min-h-[80dvh] md:p-10">
         <FeaturesBgIcon />
         <FrostGlassChip as="h2" className="relative z-10 gap-x-3 text-[12px] leading-none text-black/80">
           <Category size={18} color={FEATURE_ICON_COLOR} variant="Bulk" />
           {t("landing.features.chip")}
         </FrostGlassChip>
 
-        <p className="relative z-10 mt-8 max-w-2xl text-2xl font-bold leading-relaxed text-black/80">
+        <p className="relative z-10 mt-4 max-w-2xl text-lg font-bold leading-relaxed text-black/80 sm:mt-8 sm:text-2xl">
           {t("landing.subtitle")}
         </p>
 
-        <div className="features-cards relative z-10 mt-auto grid w-full grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="features-cards relative z-10 mt-auto grid w-full grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
           <FeaturesCards
             icon={<Category size={22} color={FEATURE_ICON_COLOR} variant="Bulk" />}
             title={t("landing.cards.oneTitle")}

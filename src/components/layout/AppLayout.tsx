@@ -12,11 +12,11 @@ export function AppLayout() {
   return (
     <div
       className={`flex min-h-screen flex-col ${
-        showMiniPlayer ? "pb-safe pb-[140px] md:pb-[80px]" : "pb-safe pb-16 md:pb-0"
+        showMiniPlayer ? "pb-safe pb-[140px] lg:pb-[80px]" : "pb-safe pb-14 sm:pb-16 lg:pb-0"
       }`}
     >
       <LandingNavbar />
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-14 sm:pt-16">
         <Outlet />
       </main>
       <AppFooter />

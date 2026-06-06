@@ -44,12 +44,12 @@ export function HeroCardSmall({
       animating={!prefersReducedMotion}
       gradientColors={[...ISOUNDS_SHIMMER_GRADIENT]}
       containerClassName={twMerge(
-        "small-hero-card h-[250px] w-[250px] rounded-[35%]",
+        "small-hero-card aspect-square h-auto w-full rounded-[35%] lg:h-[250px] lg:w-[250px]",
         className,
       )}
       className="h-full w-full overflow-hidden rounded-[35%]"
     >
-      <div className="relative flex h-full w-full flex-col justify-center gap-y-6 overflow-hidden bg-white px-[30px] py-[40px]">
+      <div className="relative flex h-full w-full flex-col justify-center gap-y-4 overflow-hidden bg-white px-4 py-6 sm:gap-y-6 sm:px-[30px] sm:py-[40px]">
         <DotPattern
           glow={!prefersReducedMotion}
           width={14}
@@ -63,16 +63,16 @@ export function HeroCardSmall({
         <div className="relative z-10 flex flex-col gap-y-6">
         <div className="flex items-center justify-between">
           {icon === "microphone" ? (
-            <Microphone2 size="42" color="#7b4ab4" variant="Bold" />
+            <Microphone2 className="h-8 w-8 sm:h-[42px] sm:w-[42px]" color="#7b4ab4" variant="Bold" />
           ) : (
-            <VideoCircle size="42" color="#7b4ab4" variant="Bold" />
+            <VideoCircle className="h-8 w-8 sm:h-[42px] sm:w-[42px]" color="#7b4ab4" variant="Bold" />
           )}
-          <AudioLines animate size={38} className="text-primary-deep" />
+          <AudioLines animate size={38} className="scale-90 text-primary-deep sm:scale-100" />
         </div>
         <div className="flex flex-col space-y-3">
           <div className="flex flex-col gap-y-1">
-            <span className="text-lg font-bold leading-tight text-text">{resolvedTitle}</span>
-            <span className="text-sm leading-tight text-text-muted">{resolvedDescription}</span>
+            <span className="text-sm font-bold leading-tight text-text sm:text-lg">{resolvedTitle}</span>
+            <span className="line-clamp-2 text-xs leading-tight text-text-muted sm:text-sm">{resolvedDescription}</span>
           </div>
           <div className="progress-bar flex h-[8px] w-full items-center overflow-hidden rounded-full bg-gray-300">
             <motion.div
@@ -159,10 +159,10 @@ export function HeroCardTall({ image, slides: slidesProp, className }: HeroCardT
       animating={!prefersReducedMotion}
       gradientColors={[...ISOUNDS_SHIMMER_GRADIENT]}
       containerClassName={twMerge(
-        "tall-hero-card h-[350px] max-w-[300px] rounded-[80px]",
+        "tall-hero-card h-full min-h-[280px] w-full max-w-none rounded-[54px] sm:min-h-[320px] sm:rounded-[70px] lg:h-[350px] lg:max-w-[300px] lg:rounded-[80px]",
         className,
       )}
-      className="relative h-full w-full overflow-hidden rounded-[80px]"
+      className="relative h-full w-full overflow-hidden rounded-[inherit]"
     >
       <div className="relative h-full w-full overflow-hidden">
         {slides.map((slide, slideIndex) => {

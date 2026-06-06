@@ -14,7 +14,7 @@ const SCROLL_THRESHOLD = 20;
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "text-body-md transition-colors hover:text-primary-bright",
+    "whitespace-nowrap text-[13px] font-semibold transition-colors hover:text-primary-bright xl:text-body-md",
     isActive ? "text-primary" : "text-text",
   );
 
@@ -51,19 +51,19 @@ export function LandingNavbar() {
         }
       />
 
-      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-8 xl:px-16">
+      <div className="relative mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:px-4 md:px-8 xl:px-16">
         <Link to="/" className="shrink-0">
           <img
             src={getLogoPath()}
             alt="iSounds"
             width={132}
             height={36}
-            className="h-8 w-auto md:h-9"
+            className="h-7 w-auto sm:h-8 md:h-9"
           />
         </Link>
 
         <nav
-          className="hidden items-center gap-6 md:flex"
+          className="hidden items-center gap-4 lg:flex xl:gap-6"
           aria-label={t("aria.mainNav")}
         >
           <NavLink to="/" end className={navLinkClass}>
@@ -86,7 +86,7 @@ export function LandingNavbar() {
           </NavLink>
         </nav>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2 md:gap-3">
           <LanguageToggle className="hidden sm:flex" />
           {auth.status === "checking" && (
             <span className="hidden rounded-md border border-border px-3 py-1 text-label text-text-muted md:inline-flex">
@@ -95,13 +95,14 @@ export function LandingNavbar() {
           )}
           {auth.status !== "subscribed" ? (
             <>
-              <GradientBorderButton className="group relative uppercase font-extrabold text-[12px] px-4 py-2 tracking-wider leading-none">
-                <div className="flex items-center gap-2">
+              <GradientBorderButton className="group relative px-3 py-2 text-[10px] font-extrabold uppercase leading-none tracking-wide sm:px-4 sm:text-[12px]">
+                <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                   {t("nav.subscribe")}
                   <ArrowRight
-                    size={16}
+                    size={15}
                     color="purple"
-                    className="transition-transform duration-300 group-hover:translate-x-1"
+                    variant="Bold"
+                    className="shrink-0 transition-transform duration-300 group-hover:translate-x-1"
                   />
                 </div>
               </GradientBorderButton>
