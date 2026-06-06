@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iSound Full Logo Animation</title>
+    <style>
+        :root {
+            /* Extracted colors from the new full logo image */
+            --brand-blue: #005A8C;
+            --brand-purple: #832B85;
+            --bg-color: #FFFFFF;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+        }
+
+        .full-logo-wrapper {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 25px; /* Space between icon and text */
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 40px;
+        }
+
+        .full-logo-wrapper:hover {
+            transform: scale(1.03);
+        }
+
+        /* --- Icon Layout --- */
+        .logo-icon {
+            width: 170px;
+            height: 170px;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+
+        /* SVG Element Styling */
+        .logo-fill {
+            fill: var(--brand-blue);
+        }
+
+        .logo-stroke {
+            stroke: var(--brand-blue);
+            stroke-width: 13;
+            stroke-linecap: round;
+            fill: none;
+        }
+
+        /* Initial states before animation */
+        .body-shape, .head-shape, .inner-wave, .outer-wave {
+            opacity: 0;
+        }
+
+        /* --- Text Layout --- */
+        .logo-text {
+            display: flex;
+            align-items: baseline;
+            font-size: 6.5rem;
+            font-weight: 800; /* Extra bold to match the image */
+            color: var(--brand-purple);
+            letter-spacing: -2px; /* Tighter letter spacing like the original */
+            padding-top: 15px; /* Visually center text with the icon */
+            user-select: none;
+        }
+
+        .letter {
+            opacity: 0;
+            transform: translateX(-25px);
+            display: inline-block;
+            animation: slideInLetter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* --- Keyframes --- */
+        
+        /* 1. Body fading and sliding up */
+        @keyframes revealBody {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 2. Head (dot) popping in */
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0); }
+            60% { opacity: 1; transform: scale(1.15); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 3. Drawing the wave arcs */
+        @keyframes drawWave {
+            to { stroke-dashoffset: 0; opacity: 1; }
+        }
+
+        /* 4. Continuous pulsing representing sound/audio */
+        @keyframes pulseAudio {
+            0% { transform: scale(0.98); opacity: 0.8; }
+            50% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(0.98); opacity: 0.8; }
+        }
+
+        /* 5. Cascading text reveal */
+        @keyframes slideInLetter {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* --- Animation Assignments & Timing --- */
+
+        .body-shape {
+            animation: revealBody 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+            transform-origin: 100px 150px;
+        }
+
+        .head-shape {
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.7s forwards;
+            transform-origin: 100px 85px;
+        }
+
+        .inner-wave {
+            stroke-dasharray: 215; 
+            stroke-dashoffset: 215;
+            transform-origin: 100px 85px;
+            animation: 
+                drawWave 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1.2s forwards,
+                pulseAudio 3s ease-in-out 2.4s infinite;
+        }
+
+        .outer-wave {
+            stroke-dasharray: 360; 
+            stroke-dashoffset: 360;
+            transform-origin: 100px 85px;
+            animation: 
+                drawWave 1.4s cubic-bezier(0.4, 0, 0.2, 1) 1.5s forwards,
+                pulseAudio 3s ease-in-out 2.7s infinite;
+        }
+
+        /* Staggered Text Delays (Following the waves) */
+        .letter:nth-child(1) { animation-delay: 1.7s; } /* i */
+        .letter:nth-child(2) { animation-delay: 1.8s; } /* S */
+        .letter:nth-child(3) { animation-delay: 1.9s; } /* O */
+        .letter:nth-child(4) { animation-delay: 2.0s; } /* U */
+        .letter:nth-child(5) { animation-delay: 2.1s; } /* N */
+        .letter:nth-child(6) { animation-delay: 2.2s; } /* D */
+        .letter:nth-child(7) { animation-delay: 2.3s; } /* S */
+
+        /* Hover states to speed up the audio pulse (interactive feel) */
+        .full-logo-wrapper:hover .inner-wave,
+        .full-logo-wrapper:hover .outer-wave {
+            animation-duration: 1.2s, 1s; 
+        }
+
+        /* Responsive scaling for smaller screens */
+        @media (max-width: 768px) {
+            .full-logo-wrapper {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .logo-text {
+                font-size: 4rem;
+                padding-top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="full-logo-wrapper" aria-label="iSOUNDS Animated Logo">
+        
+        <!-- Animated Icon -->
+        <svg class="logo-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer Wave -->
+            <path class="logo-stroke outer-wave" d="M 42.6 133.2 A 75 75 0 1 1 157.4 133.2" />
+            
+            <!-- Inner Wave -->
+            <path class="logo-stroke inner-wave" d="M 65.5 113.9 A 45 45 0 1 1 134.5 113.9" />
+            
+            <!-- 'i' Body Shape -->
+            <path class="logo-fill body-shape" d="M 66 135 C 66 120, 80 118, 100 118 C 120 118, 134 120, 134 135 C 134 170, 120 195, 100 195 C 80 195, 66 170, 66 135 Z" />
+            
+            <!-- 'i' Head (Dot) -->
+            <circle class="logo-fill head-shape" cx="100" cy="85" r="16.5" />
+        </svg>
+
+        <!-- Staggered Animated Wordmark -->
+        <div class="logo-text">
+            <span class="letter">i</span>
+            <span class="letter">S</span>
+            <span class="letter">O</span>
+            <span class="letter">U</span>
+            <span class="letter">N</span>
+            <span class="letter">D</span>
+            <span class="letter">S</span>
+        </div>
+
+    </div>
+
+</body>
+</html>

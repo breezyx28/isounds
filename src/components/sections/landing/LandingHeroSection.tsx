@@ -6,7 +6,7 @@ import { HeroCompanyCards } from "@/components/ui/cards/hero-company-cards";
 import { HeroSilkBackground } from "@/components/ui/silk/HeroSilkBackground";
 import { GradientBorderButton } from "@/components/ui/buttons/gradient-border-button";
 import { DiaTextReveal } from "@/components/ui/dia-text-reveal";
-import GradientText from "@/components/ui/gradient-text";
+import { AnimatedIsoundFullLogo } from "@/components/shared/AnimatedIsoundFullLogo";
 
 const heroCardsStaggerContainer = {
   hidden: {},
@@ -60,16 +60,20 @@ export function LandingHeroSection() {
                 className="inline-block"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: heroCopyDelay, duration: 0.45, ease: "easeOut" }}
+                transition={{
+                  delay: heroCopyDelay,
+                  duration: 0.45,
+                  ease: "easeOut",
+                }}
               >
-                <GradientText
-                  colors={["#9f67db", "#b786ea", "#4079ff", "#b786ea", "#9f67db"]}
-                  animationSpeed={3}
-                  showBorder={false}
-                  className="font-nunito font-black uppercase"
-                >
-                  {t("landing.hero.brand")}
-                </GradientText>
+                <AnimatedIsoundFullLogo
+                  direction="ltr"
+                  className="hover:scale-none"
+                  gap={8}
+                  size={400}
+                  letterSpacing={10}
+                  disableHoverEffect
+                />
               </motion.span>
               <br />
               <DiaTextReveal
@@ -139,12 +143,16 @@ export function LandingHeroSection() {
                     {
                       image: "/assets/images/microphone-1.jpg",
                       title: t("landing.hero.tallSlides.mic1.title"),
-                      description: t("landing.hero.tallSlides.mic1.description"),
+                      description: t(
+                        "landing.hero.tallSlides.mic1.description",
+                      ),
                     },
                     {
                       image: "/assets/images/microphone-2.jpg",
                       title: t("landing.hero.tallSlides.mic2.title"),
-                      description: t("landing.hero.tallSlides.mic2.description"),
+                      description: t(
+                        "landing.hero.tallSlides.mic2.description",
+                      ),
                     },
                   ]}
                 />
@@ -164,7 +172,9 @@ export function LandingHeroSection() {
                     {
                       image: "/logos/zain-logo.png",
                       title: t("landing.hero.tallSlides.partner.title"),
-                      description: t("landing.hero.tallSlides.partner.description"),
+                      description: t(
+                        "landing.hero.tallSlides.partner.description",
+                      ),
                     },
                   ]}
                 />
