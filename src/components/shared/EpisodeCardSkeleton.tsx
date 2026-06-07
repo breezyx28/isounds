@@ -4,10 +4,23 @@ import { cn } from "@/lib/utils";
 
 export const EpisodeCardSkeleton = memo(function EpisodeCardSkeleton({
   variant = "vertical",
+  mediaClassName,
 }: {
   variant?: "vertical" | "horizontal" | "featured";
+  mediaClassName?: string;
 }) {
   if (variant === "horizontal") {
+    if (mediaClassName) {
+      return (
+        <div className="w-full space-y-3 rounded-[28px] border border-border bg-surface p-5">
+          <Skeleton className={cn("w-full rounded-2xl", mediaClassName)} />
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+      );
+    }
+
     return (
       <div className="flex gap-3 rounded-lg border border-border bg-surface p-3">
         <Skeleton className="h-20 w-20 shrink-0 rounded-md" />

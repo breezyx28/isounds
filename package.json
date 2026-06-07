@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "smoke:zoalcast": "bun run ./scripts/smoke-zoalcast.ts",
-    "icons:pwa": "bun run ./scripts/generate-pwa-icons.ts"
+    "icons:pwa": "bun run ./scripts/generate-pwa-icons.ts",
+    "vapid:keys": "bun run ./scripts/generate-vapid-keys.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -45,6 +46,7 @@
     "tailwind-merge": "^3.6.0",
     "three": "^0.184.0",
     "vaul": "^1.1.2",
+    "web-push": "^3.6.7",
     "yup": "^1.7.1"
   },
   "devDependencies": {
@@ -54,6 +56,7 @@
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "@types/three": "^0.184.1",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^4.5.1",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",

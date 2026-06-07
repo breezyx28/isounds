@@ -71,9 +71,9 @@ export default function CategoryPage() {
       </header>
 
       {isLoading && (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <EpisodeCardSkeleton key={i} />
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <EpisodeCardSkeleton key={i} variant="horizontal" mediaClassName="h-[300px]" />
           ))}
         </div>
       )}
@@ -89,12 +89,13 @@ export default function CategoryPage() {
 
       {!isLoading && !isError && (
         <>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-3">
+          <div className="space-y-3">
             {podcasts.map((podcast) => (
               <EpisodeCard
                 key={podcast.id}
                 podcast={podcast}
-                variant="vertical"
+                variant="horizontal"
+                mediaClassName="h-[300px]"
                 className="w-full max-w-none"
               />
             ))}

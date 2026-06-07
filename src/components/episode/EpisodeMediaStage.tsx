@@ -139,7 +139,10 @@ export function EpisodeMediaStage({
         <img
           src={imageUrl}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className={cn(
+            "absolute inset-0 h-full w-full object-cover transition-[filter] duration-300",
+            !isSubscribed && "scale-105 blur-md brightness-[0.45]",
+          )}
           loading="eager"
           fetchPriority="high"
         />
@@ -160,7 +163,7 @@ export function EpisodeMediaStage({
       <div
         className={cn(
           "absolute inset-0 z-[2]",
-          isVideo && isSubscribed ? "bg-black/25" : "bg-black/55",
+          isVideo && isSubscribed ? "bg-black/25" : isSubscribed ? "bg-black/55" : "bg-black/65",
         )}
         aria-hidden
       />
@@ -266,8 +269,12 @@ export function EpisodeMediaStage({
       </div>
 
       {!isSubscribed && (
-        <div className="absolute inset-0 z-[4] flex items-center justify-center bg-black/55 p-6">
-          <SubscribeGate className="max-w-md border-white/20 bg-black/40 text-white [&_p]:text-white/90" />
+        <div className="absolute inset-0 z-[4] flex items-end justify-center p-4 backdrop-blur-[2px] md:items-center md:p-8">
+          <SubscribeGate
+            variant="overlay"
+            coverImage={imageUrl}
+            className="max-w-3xl"
+          />
         </div>
       )}
     </div>

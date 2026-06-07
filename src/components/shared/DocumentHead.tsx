@@ -30,6 +30,10 @@ const ROUTE_META: Record<
     title: "Saved — iSounds",
     description: "Your bookmarked podcasts on iSounds.",
   },
+  "/library/personalization": {
+    title: "For you — iSounds",
+    description: "Your personalized listening profile and category preferences.",
+  },
   "/subscribe": {
     title: "Subscribe — iSounds",
     description: "Subscribe to iSounds through Zain Sudan.",

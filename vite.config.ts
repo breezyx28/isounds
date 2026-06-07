@@ -4,10 +4,17 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const pwaPlugin = VitePWA({
+  strategies: "injectManifest",
+  srcDir: "src",
+  filename: "sw.ts",
   registerType: "autoUpdate",
   injectRegister: null,
   devOptions: {
     enabled: false,
+  },
+  injectManifest: {
+    globPatterns: ["**/*.{js,css,html,svg,png,jpg,jpeg,woff,woff2}"],
+    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
   },
   manifestFilename: "manifest.json",
   includeAssets: [
@@ -66,64 +73,6 @@ const pwaPlugin = VitePWA({
         src: "/screenshots/home.svg",
         sizes: "1280x720",
         type: "image/svg+xml",
-      },
-    ],
-  },
-  workbox: {
-    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-    globPatterns: ["**/*.{js,css,html,svg,png,jpg,jpeg,woff,woff2}"],
-    navigateFallback: "/offline.html",
-    runtimeCaching: [
-      {
-        urlPattern: ({ request }) => request.mode === "navigate",
-        handler: "NetworkFirst",
-        options: { cacheName: "html-shell" },
-      },
-      {
-        urlPattern: ({ request }) =>
-          request.destination === "script" ||
-          request.destination === "style" ||
-          request.destination === "font",
-        handler: "CacheFirst",
-        options: { cacheName: "static-assets" },
-      },
-      {
-        urlPattern: /^https:\/\/api\.zoalcast\.com\/api\/.*/i,
-        handler: "StaleWhileRevalidate",
-        options: {
-          cacheName: "zoalcast-api",
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 300,
-          },
-        },
-      },
-      {
-        urlPattern: ({ url }) => url.pathname.startsWith("/api/zoalcast/"),
-        handler: "StaleWhileRevalidate",
-        options: {
-          cacheName: "zoalcast-api-proxy",
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 300,
-          },
-        },
-      },
-      {
-        urlPattern: ({ request }) => request.destination === "image",
-        handler: "CacheFirst",
-        options: {
-          cacheName: "episode-images",
-          expiration: {
-            maxEntries: 200,
-            maxAgeSeconds: 60 * 60 * 24 * 30,
-          },
-        },
-      },
-      {
-        urlPattern: ({ url }) => /\/(audio|stream)\//i.test(url.pathname),
-        handler: "NetworkOnly",
-        options: { cacheName: "audio-streams" },
       },
     ],
   },

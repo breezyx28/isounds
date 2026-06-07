@@ -40,7 +40,7 @@ export function LandingScrollMarqueeSection() {
       aria-label={t("landing.scrollMarquee.aria")}
     >
       <ScrollVelocity
-        texts={[partnershipStrip, partnershipStrip]}
+        texts={[partnershipStrip]}
         velocity={16}
         numCopies={5}
         damping={60}

@@ -22,6 +22,8 @@ export const localApi = createApi({
     "Complaints",
     "PwaEvents",
     "Bookmarks",
+    "Personalization",
+    "Push",
   ],
   endpoints: (builder) => ({
     getPreferences: builder.query<Record<string, string>, void>({
@@ -82,7 +84,13 @@ export const localApi = createApi({
     }),
     recordVisit: builder.mutation<
       { ok: boolean },
-      { session_id: string; path: string }
+      {
+        session_id: string;
+        path: string;
+        category_id?: number;
+        podcast_id?: number;
+        event_type?: string;
+      }
     >({
       query: (body) => ({
         url: "/visits",
@@ -217,6 +225,102 @@ export const localApi = createApi({
       }),
       invalidatesTags: ["PwaEvents"],
     }),
+    getPersonalizationProfile: builder.query<
+      {
+        affinities: Array<{ category_id: number; score: number; signals: Record<string, number> }>;
+        settings: Array<{
+          category_id: number;
+          pinned: boolean;
+          hidden: boolean;
+          push_enabled: boolean;
+        }>;
+        push_subscribed: boolean;
+        event_count: number;
+        last_updated: number;
+        push_threshold: number;
+      },
+      void
+    >({
+      query: () => "/personalization/profile",
+      providesTags: ["Personalization"],
+      keepUnusedDataFor: 60,
+    }),
+    recomputePersonalization: builder.mutation<
+      { ok: boolean; profile: unknown },
+      void
+    >({
+      query: () => ({
+        url: "/personalization/recompute",
+        method: "POST",
+      }),
+      invalidatesTags: ["Personalization"],
+    }),
+    updateCategorySettings: builder.mutation<
+      { ok: boolean },
+      {
+        category_id: number;
+        pinned?: boolean;
+        hidden?: boolean;
+        push_enabled?: boolean;
+      }
+    >({
+      query: (body) => ({
+        url: "/personalization/category-settings",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Personalization"],
+    }),
+    resetPersonalizationSettings: builder.mutation<{ ok: boolean }, void>({
+      query: () => ({
+        url: "/personalization/reset-settings",
+        method: "POST",
+      }),
+      invalidatesTags: ["Personalization"],
+    }),
+    getVapidPublicKey: builder.query<
+      { configured: boolean; publicKey: string },
+      void
+    >({
+      query: () => "/push/vapid-public-key",
+    }),
+    getPushStatus: builder.query<
+      {
+        subscribed: boolean;
+        push_configured: boolean;
+        categories_enabled: number[];
+      },
+      void
+    >({
+      query: () => "/push/status",
+      providesTags: ["Push"],
+    }),
+    subscribePush: builder.mutation<
+      { ok: boolean },
+      {
+        endpoint: string;
+        keys: { p256dh: string; auth: string };
+        user_agent?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/push/subscribe",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Push", "Personalization"],
+    }),
+    unsubscribePush: builder.mutation<
+      { ok: boolean },
+      { endpoint?: string } | void
+    >({
+      query: (body) => ({
+        url: "/push/subscribe",
+        method: "DELETE",
+        body: body ?? {},
+      }),
+      invalidatesTags: ["Push", "Personalization"],
+    }),
   }),
 });
 
@@ -242,4 +346,12 @@ export const {
   useSubmitComplaintMutation,
   useGetComplaintsQuery,
   useRecordPwaEventMutation,
+  useGetPersonalizationProfileQuery,
+  useRecomputePersonalizationMutation,
+  useUpdateCategorySettingsMutation,
+  useResetPersonalizationSettingsMutation,
+  useGetVapidPublicKeyQuery,
+  useGetPushStatusQuery,
+  useSubscribePushMutation,
+  useUnsubscribePushMutation,
 } = localApi;

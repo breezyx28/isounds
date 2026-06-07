@@ -21,6 +21,7 @@ import { BookmarkMigration } from "@/features/bookmarks/BookmarkMigration";
 import { DocumentHead } from "@/components/shared/DocumentHead";
 import { FaviconManager } from "@/components/shared/FaviconManager";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import HomePage from "@/pages/HomePage";
 import CategoriesPage from "@/pages/CategoriesPage";
@@ -31,6 +32,7 @@ import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import ExplorePage from "@/pages/ExplorePage";
 import LibraryPage from "@/pages/LibraryPage";
 import SavedPodcastsPage from "@/pages/SavedPodcastsPage";
+import PersonalizationPage from "@/pages/PersonalizationPage";
 import SubscribePage from "@/pages/SubscribePage";
 import LoginPage from "@/pages/LoginPage";
 import ContactPage from "@/pages/ContactPage";
@@ -115,6 +117,7 @@ export default function App() {
       <GlobalAudio />
       <PwaInstallBanner />
       <Toaster theme="light" richColors />
+      <ScrollToTop />
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Navigate to="/" replace />} />
@@ -128,6 +131,7 @@ export default function App() {
             <Route path="library" element={<RequireSubscribed />}>
               <Route index element={<LibraryPage />} />
               <Route path="saved" element={<SavedPodcastsPage />} />
+              <Route path="personalization" element={<PersonalizationPage />} />
               <Route path="history" element={<LibraryPage />} />
             </Route>
             <Route path="subscribe" element={<SubscribePage />} />

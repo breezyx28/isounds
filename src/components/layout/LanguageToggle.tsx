@@ -6,6 +6,7 @@ import {
   LanguageFlagIcon,
 } from "@/components/icons/LanguageFlags";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useSavePreferenceMutation } from "@/store/localApi";
 import { setLanguage, type Language } from "@/store/slices/uiSlice";
 import { cn } from "@/lib/utils";
 
@@ -13,12 +14,17 @@ export function LanguageToggle({ className }: { className?: string }) {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const language = useAppSelector((s) => s.ui.language);
+  const authStatus = useAppSelector((s) => s.auth.status);
+  const [savePreference] = useSavePreferenceMutation();
   const prefersReducedMotion = useReducedMotion();
 
   const toggle = () => {
     const next: Language = language === "ar" ? "en" : "ar";
     dispatch(setLanguage(next));
     applyDocumentLanguage(next);
+    if (authStatus === "subscribed") {
+      void savePreference({ key: "lang", value: next });
+    }
   };
 
   const otherLanguage = language === "ar" ? "en" : "ar";

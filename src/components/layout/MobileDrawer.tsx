@@ -64,6 +64,13 @@ export function MobileDrawer() {
                 {t("nav.library", { defaultValue: "Library" })}
               </Link>
               <Link
+                to="/library/personalization"
+                className="min-h-11 rounded-md px-2 py-2.5 text-body-md hover:bg-surface-raised"
+                onClick={() => dispatch(setMobileDrawerOpen(false))}
+              >
+                {t("nav.personalization", { defaultValue: "For you" })}
+              </Link>
+              <Link
                 to="/library/saved"
                 className="min-h-11 rounded-md px-2 py-2.5 text-body-md hover:bg-surface-raised"
                 onClick={() => dispatch(setMobileDrawerOpen(false))}

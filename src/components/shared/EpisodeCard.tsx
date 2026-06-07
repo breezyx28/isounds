@@ -45,6 +45,7 @@ interface EpisodeCardProps {
   podcast: Podcast;
   variant?: EpisodeCardVariant;
   className?: string;
+  mediaClassName?: string;
   /** Disables cutout hover elevation and action button hovers (detail page). */
   disableHover?: boolean;
 }
@@ -255,6 +256,7 @@ export const EpisodeCard = memo(function EpisodeCard({
   podcast,
   variant = "vertical",
   className,
+  mediaClassName,
   disableHover = false,
 }: EpisodeCardProps) {
   if (variant === "sidebar") {
@@ -272,7 +274,7 @@ export const EpisodeCard = memo(function EpisodeCard({
       <EpisodeCutoutCard
         podcast={podcast}
         className={cn("max-w-full", className)}
-        mediaClassName="h-32"
+        mediaClassName={mediaClassName ?? "h-32"}
         disableHover={disableHover}
       />
     );
@@ -283,7 +285,7 @@ export const EpisodeCard = memo(function EpisodeCard({
       <EpisodeCutoutCard
         podcast={podcast}
         className={cn("min-w-[280px] md:min-w-[480px]", className)}
-        mediaClassName="h-56 md:h-64"
+        mediaClassName={mediaClassName ?? "h-56 md:h-64"}
         disableHover={disableHover}
       />
     );
@@ -296,6 +298,7 @@ export const EpisodeCard = memo(function EpisodeCard({
         variant === "grid" ? "w-full" : "w-72 shrink-0 sm:w-80",
         className,
       )}
+      mediaClassName={mediaClassName}
       disableHover={disableHover}
     />
   );

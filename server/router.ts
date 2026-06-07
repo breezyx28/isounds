@@ -5,10 +5,21 @@ import {
   requireSubscribed,
   touchUser,
 } from "./auth";
+import {
+  computeUserAffinities,
+  getPersonalizationProfile,
+  recomputeAffinitiesNow,
+  resetCategorySettings,
+  scheduleAffinityRecompute,
+  updateCategorySettings,
+} from "./affinity";
+import { getVapidPublicKey, isPushConfigured } from "./push";
+import { parseVisitPath } from "./visitParser";
+import { fetchPodcastDetail, upsertPodcastCache } from "./zoalcast";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   "Access-Control-Allow-Headers":
     "Content-Type, X-ISounds-Msisdn, X-ISounds-Subscribed",
 };
@@ -104,6 +115,9 @@ export async function router(req: Request, db: Database): Promise<Response> {
     const body = (await req.json()) as {
       session_id?: string;
       path?: string;
+      category_id?: number;
+      podcast_id?: number;
+      event_type?: string;
     };
     if (!body.session_id?.trim() || !body.path?.trim()) {
       return json({ error: "session_id and path required" }, 400);
@@ -113,10 +127,34 @@ export async function router(req: Request, db: Database): Promise<Response> {
       touchUser(db, identity.msisdn, identity.subscribed);
     }
 
+    const parsed = parseVisitPath(body.path.trim());
+    const categoryId = body.category_id ?? parsed.category_id ?? null;
+    const podcastId = body.podcast_id ?? parsed.podcast_id ?? null;
+    const eventType = body.event_type ?? parsed.event_type;
+
+    if (podcastId && identity.msisdn) {
+      void fetchPodcastDetail(podcastId).then((detail) => {
+        if (detail) upsertPodcastCache(db, detail);
+      });
+    }
+
     db.run(
-      "INSERT INTO visits (session_id, msisdn, path, created_at) VALUES (?, ?, ?, unixepoch())",
-      [body.session_id.trim(), identity.msisdn, body.path.trim()],
+      `INSERT INTO visits (session_id, msisdn, path, category_id, podcast_id, event_type, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, unixepoch())`,
+      [
+        body.session_id.trim(),
+        identity.msisdn,
+        body.path.trim(),
+        categoryId,
+        podcastId,
+        eventType,
+      ],
     );
+
+    if (identity.msisdn && identity.subscribed) {
+      scheduleAffinityRecompute(db, identity.msisdn);
+    }
+
     return json({ ok: true });
   }
 
@@ -215,21 +253,24 @@ export async function router(req: Request, db: Database): Promise<Response> {
   }
 
   if (path === "/preferences" && req.method === "GET") {
-    const rows = db.query("SELECT key, value FROM user_preferences").all() as {
-      key: string;
-      value: string;
-    }[];
+    const msisdn = identity.msisdn ?? "";
+    const rows = db
+      .query("SELECT key, value FROM user_preferences WHERE msisdn = ?")
+      .all(msisdn) as { key: string; value: string }[];
     const prefs: Record<string, string> = {};
     for (const row of rows) prefs[row.key] = row.value;
     return json(prefs);
   }
 
   if (path === "/preferences" && req.method === "POST") {
+    const msisdn = identity.msisdn ?? "";
     const body = (await req.json()) as
       | Record<string, string>
       | { key?: string; value?: string };
     const upsert = db.query(
-      "INSERT INTO user_preferences (key, value, updated_at) VALUES (?, ?, unixepoch()) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = unixepoch()",
+      `INSERT INTO user_preferences (msisdn, key, value, updated_at)
+       VALUES (?, ?, ?, unixepoch())
+       ON CONFLICT(msisdn, key) DO UPDATE SET value = excluded.value, updated_at = unixepoch()`,
     );
     if (
       "key" in body &&
@@ -237,12 +278,12 @@ export async function router(req: Request, db: Database): Promise<Response> {
       typeof body.key === "string" &&
       typeof body.value === "string"
     ) {
-      upsert.run(body.key, body.value);
+      upsert.run(msisdn, body.key, body.value);
       return json({ ok: true });
     }
     for (const [key, value] of Object.entries(body)) {
       if (typeof value !== "string") continue;
-      upsert.run(key, value);
+      upsert.run(msisdn, key, value);
     }
     return json({ ok: true });
   }
@@ -445,6 +486,122 @@ export async function router(req: Request, db: Database): Promise<Response> {
       body.event,
     ]);
     return json({ ok: true });
+  }
+
+  if (path === "/personalization/profile" && req.method === "GET") {
+    const msisdn = requireSubscribed(req);
+    if (msisdn instanceof Response) return msisdn;
+    return json(getPersonalizationProfile(db, msisdn));
+  }
+
+  if (path === "/personalization/recompute" && req.method === "POST") {
+    const msisdn = requireSubscribed(req);
+    if (msisdn instanceof Response) return msisdn;
+    const result = await recomputeAffinitiesNow(db, msisdn);
+    if (!result.ok) {
+      return json({ error: result.error ?? "failed" }, 429);
+    }
+    return json({ ok: true, profile: getPersonalizationProfile(db, msisdn) });
+  }
+
+  if (path === "/personalization/category-settings" && req.method === "PATCH") {
+    const msisdn = requireSubscribed(req);
+    if (msisdn instanceof Response) return msisdn;
+    const body = (await req.json()) as {
+      category_id?: number;
+      pinned?: boolean;
+      hidden?: boolean;
+      push_enabled?: boolean;
+    };
+    if (!body.category_id || !Number.isFinite(body.category_id)) {
+      return json({ error: "category_id required" }, 400);
+    }
+    updateCategorySettings(db, msisdn, body.category_id, {
+      pinned: body.pinned,
+      hidden: body.hidden,
+      push_enabled: body.push_enabled,
+    });
+    void computeUserAffinities(db, msisdn);
+    return json({ ok: true, profile: getPersonalizationProfile(db, msisdn) });
+  }
+
+  if (path === "/personalization/reset-settings" && req.method === "POST") {
+    const msisdn = requireSubscribed(req);
+    if (msisdn instanceof Response) return msisdn;
+    resetCategorySettings(db, msisdn);
+    void computeUserAffinities(db, msisdn);
+    return json({ ok: true, profile: getPersonalizationProfile(db, msisdn) });
+  }
+
+  if (path === "/push/vapid-public-key" && req.method === "GET") {
+    return json({
+      configured: isPushConfigured(),
+      publicKey: getVapidPublicKey(),
+    });
+  }
+
+  if (path === "/push/subscribe" && req.method === "POST") {
+    const msisdn = requireSubscribed(req);
+    if (msisdn instanceof Response) return msisdn;
+    const body = (await req.json()) as {
+      endpoint?: string;
+      keys?: { p256dh?: string; auth?: string };
+      user_agent?: string;
+    };
+    if (!body.endpoint?.trim() || !body.keys?.p256dh || !body.keys?.auth) {
+      return json({ error: "invalid subscription" }, 400);
+    }
+    db.run(
+      `INSERT INTO push_subscriptions (msisdn, endpoint, p256dh, auth, user_agent, created_at, last_used_at)
+       VALUES (?, ?, ?, ?, ?, unixepoch(), unixepoch())
+       ON CONFLICT(endpoint) DO UPDATE SET
+         msisdn = excluded.msisdn,
+         p256dh = excluded.p256dh,
+         auth = excluded.auth,
+         user_agent = excluded.user_agent,
+         last_used_at = unixepoch()`,
+      [
+        msisdn,
+        body.endpoint.trim(),
+        body.keys.p256dh,
+        body.keys.auth,
+        body.user_agent ?? req.headers.get("User-Agent"),
+      ],
+    );
+    return json({ ok: true });
+  }
+
+  if (path === "/push/subscribe" && req.method === "DELETE") {
+    const msisdn = requireSubscribed(req);
+    if (msisdn instanceof Response) return msisdn;
+    const body = (await req.json()) as { endpoint?: string };
+    if (body.endpoint?.trim()) {
+      db.run("DELETE FROM push_subscriptions WHERE msisdn = ? AND endpoint = ?", [
+        msisdn,
+        body.endpoint.trim(),
+      ]);
+    } else {
+      db.run("DELETE FROM push_subscriptions WHERE msisdn = ?", [msisdn]);
+    }
+    return json({ ok: true });
+  }
+
+  if (path === "/push/status" && req.method === "GET") {
+    const msisdn = requireSubscribed(req);
+    if (msisdn instanceof Response) return msisdn;
+    const count = db
+      .query("SELECT COUNT(*) AS cnt FROM push_subscriptions WHERE msisdn = ?")
+      .get(msisdn) as { cnt: number };
+    const pushEnabledCategories = db
+      .query(
+        "SELECT category_id FROM category_settings WHERE msisdn = ? AND push_enabled = 1",
+      )
+      .all(msisdn) as Array<{ category_id: number }>;
+    return json({
+      subscribed: count.cnt > 0,
+      push_configured: isPushConfigured(),
+      categories_enabled: pushEnabledCategories.map((row) => row.category_id),
+    });
   }
 
   return json({ error: "Not implemented", path }, 501);

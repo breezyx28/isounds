@@ -49,7 +49,7 @@ export default function LibraryPage() {
           {t("library:title")}
         </h1>
 
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="mb-6 flex flex-wrap items-center gap-2">
           {tabs.map((item) => (
             <button
               key={item}
@@ -67,6 +67,11 @@ export default function LibraryPage() {
               })}
             </button>
           ))}
+          <Button variant="secondary" asChild className="min-h-11">
+            <Link to="/library/personalization">
+              {t("common:nav.personalization", { defaultValue: "For you" })}
+            </Link>
+          </Button>
         </div>
 
         {tab === "liked" && (

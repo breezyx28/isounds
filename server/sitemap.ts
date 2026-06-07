@@ -13,6 +13,7 @@ const STATIC_ROUTES = [
   "/explore",
   "/library",
   "/library/saved",
+  "/library/personalization",
   "/subscribe",
   "/login",
   "/about",

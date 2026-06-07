@@ -220,7 +220,15 @@ export function DiaTextReveal({
       stopRef.current?.()
       clearTimeout(timerRef.current)
     }
-  }, [isInView, startOnView, once, prefersReducedMotion, sweepPos])
+  }, [
+    startOnView ? isInView : true,
+    startOnView,
+    once,
+    prefersReducedMotion,
+    delay,
+    duration,
+    sweepPos,
+  ])
 
   const fixedW =
     isMulti && fixedWidth && measuredWidths.length > 0

@@ -7,11 +7,13 @@ import arEpisodes from "./locales/ar/episodes.json";
 import arPlayer from "./locales/ar/player.json";
 import arSearch from "./locales/ar/search.json";
 import arLibrary from "./locales/ar/library.json";
+import arPersonalization from "./locales/ar/personalization.json";
 import enCommon from "./locales/en/common.json";
 import enEpisodes from "./locales/en/episodes.json";
 import enPlayer from "./locales/en/player.json";
 import enSearch from "./locales/en/search.json";
 import enLibrary from "./locales/en/library.json";
+import enPersonalization from "./locales/en/personalization.json";
 
 const resources = {
   ar: {
@@ -20,6 +22,7 @@ const resources = {
     player: arPlayer,
     search: arSearch,
     library: arLibrary,
+    personalization: arPersonalization,
   },
   en: {
     common: enCommon,
@@ -27,6 +30,7 @@ const resources = {
     player: enPlayer,
     search: enSearch,
     library: enLibrary,
+    personalization: enPersonalization,
   },
 };
 
@@ -37,7 +41,7 @@ void i18n
     resources,
     fallbackLng: "ar",
     defaultNS: "common",
-    ns: ["common", "episodes", "player", "search", "library"],
+    ns: ["common", "episodes", "player", "search", "library", "personalization"],
     interpolation: { escapeValue: false },
     detection: {
       order: ["localStorage", "navigator"],

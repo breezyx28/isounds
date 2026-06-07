@@ -1,13 +1,28 @@
 import { registerSW } from "virtual:pwa-register";
 
+let swRegistration: ServiceWorkerRegistration | null = null;
+
+export function getSwRegistration() {
+  return swRegistration;
+}
+
 export function registerPwa() {
+  const register = () => {
+    registerSW({
+      immediate: false,
+      onRegistered(registration) {
+        swRegistration = registration ?? null;
+      },
+    });
+  };
+
   const idleCallback =
     "requestIdleCallback" in window ? window.requestIdleCallback.bind(window) : undefined;
 
   if (idleCallback) {
-    idleCallback(() => registerSW({ immediate: false }));
+    idleCallback(register);
     return;
   }
 
-  globalThis.setTimeout(() => registerSW({ immediate: false }), 1200);
+  globalThis.setTimeout(register, 1200);
 }

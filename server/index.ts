@@ -5,6 +5,8 @@ import { dirname } from "node:path";
 import { router } from "./router";
 import { runMigrations } from "./migrations";
 import { injectMetaIntoShell, resolveRouteMeta } from "./og";
+import { startNewEpisodePoller } from "./jobs/newEpisodePoller";
+import { configureWebPush } from "./push";
 import { getRobotsTxt, getSitemapXml } from "./sitemap";
 
 const PORT = Number(process.env.PORT ?? 8888);
@@ -16,6 +18,8 @@ if (!existsSync(dbDir)) mkdirSync(dbDir, { recursive: true });
 
 const db = new Database(DB_PATH, { create: true });
 runMigrations(db);
+configureWebPush();
+startNewEpisodePoller(db);
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",

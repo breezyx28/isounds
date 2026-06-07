@@ -235,8 +235,8 @@ export default function EpisodeDetailPage() {
     />
   );
 
-  const episodeBody = (
-    <div className="space-y-0">
+  const episodeDetails = (
+    <>
       <div className="py-6">
         <h1 className="text-display-md font-semibold leading-snug tracking-tight text-text text-balance md:text-display-lg">
           {podcast.name}
@@ -280,6 +280,12 @@ export default function EpisodeDetailPage() {
       <div className="py-4">
         <ComplaintModal podcastId={podcast.id} />
       </div>
+    </>
+  );
+
+  const episodeBody = (
+    <div className="space-y-0">
+      {episodeDetails}
 
       <Separator />
 
@@ -296,11 +302,19 @@ export default function EpisodeDetailPage() {
   return (
     <main className="is-page">
       <section className="is-section mx-auto w-full max-w-7xl px-4">
-        {/* Mobile: poster → sidebar → details */}
+        {/* Mobile: video → details → related sidebar → more related */}
         <div className="flex flex-col gap-6 lg:hidden">
           {mediaStage}
+          <div className="space-y-0">{episodeDetails}</div>
           {relatedSidebar}
-          {episodeBody}
+          <Separator />
+          <EpisodeRelatedStrip
+            episodes={shuffledRelated}
+            isLoading={relatedLoading}
+            isError={relatedError}
+            onRetry={() => refetchRelated()}
+            categoryId={podcast.category_id}
+          />
         </div>
 
         {/* Desktop: 75% column (poster + details) | 25% sidebar */}

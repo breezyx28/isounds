@@ -1,0 +1,48 @@
+{
+  "title": "Your listening profile",
+  "subtitle": "We learn what you enjoy from your browsing, listening, bookmarks, and ratings — then tailor recommendations and notifications.",
+  "lastUpdated": "Last updated {{date}}",
+  "refresh": "Refresh tastes",
+  "refreshing": "Updating…",
+  "eventCount": "{{count}} interactions tracked",
+  "coldStart": {
+    "title": "We're still learning your tastes",
+    "body": "Browse categories, listen to episodes, bookmark favorites, and rate shows — your profile will build automatically.",
+    "browse": "Browse podcasts",
+    "explore": "Explore categories"
+  },
+  "tasteSection": "Top categories",
+  "controlsSection": "Category preferences",
+  "forYouSection": "For you",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "hide": "Hide",
+  "show": "Show",
+  "pushOn": "Notify",
+  "pushOff": "Mute",
+  "hiddenLabel": "Hidden",
+  "pinnedLabel": "Pinned",
+  "notifications": {
+    "title": "Episode notifications",
+    "body": "Get notified when new episodes publish in categories you follow. Works best when iSounds is installed on your home screen.",
+    "enable": "Enable notifications",
+    "disable": "Disable notifications",
+    "enabled": "Notifications enabled",
+    "iosHint": "On iPhone, add iSounds to your Home Screen first, then enable notifications here."
+  },
+  "privacy": {
+    "title": "Your data",
+    "body": "Taste signals stay on iSounds servers — we don't use third-party ad trackers.",
+    "resetOverrides": "Reset manual preferences",
+    "resetConfirm": "Category pins, hides, and notification toggles were reset."
+  },
+  "push": {
+    "unsupported": "Push notifications aren't supported in this browser.",
+    "notConfigured": "Push notifications aren't configured on the server yet.",
+    "denied": "Notification permission was denied. Enable it in browser settings.",
+    "failed": "Couldn't update notification settings.",
+    "enabled": "Notifications enabled for your favorite categories.",
+    "disabled": "Notifications turned off."
+  },
+  "rateLimited": "Please wait a moment before refreshing again."
+}
