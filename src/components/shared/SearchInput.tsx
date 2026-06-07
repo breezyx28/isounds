@@ -40,7 +40,7 @@ export function SearchInput({ value, onChange, onSubmit }: SearchInputProps) {
         </label>
         <input
           id="search-input"
-          autoFocus
+          // autoFocus
           value={value}
           onChange={(event) => onChange(event.target.value)}
           onFocus={() => setFocused(true)}

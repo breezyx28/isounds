@@ -209,7 +209,7 @@ export default function ExplorePage() {
           </div>
           <div>
             {isLoading && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {Array.from({ length: 8 }).map((_, idx) => (
                   <EpisodeCardSkeleton key={idx} />
                 ))}
@@ -250,7 +250,7 @@ export default function ExplorePage() {
                 <div
                   className={
                     view === "grid"
-                      ? "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+                      ? "grid grid-cols-1 gap-4 sm:grid-cols-2"
                       : "space-y-3"
                   }
                 >
