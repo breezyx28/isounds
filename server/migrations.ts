@@ -206,6 +206,20 @@ function migrateLegacySchema(db: Database) {
   db.run(`CREATE INDEX IF NOT EXISTS idx_affinities_msisdn ON category_affinities(msisdn)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_push_msisdn ON push_subscriptions(msisdn)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_category_settings_msisdn ON category_settings(msisdn)`);
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_visits_msisdn_created ON visits(msisdn, created_at)`,
+  );
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_bookmarks_msisdn_created ON bookmarks(msisdn, created_at)`,
+  );
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_listening_msisdn_updated ON listening_history(msisdn, updated_at)`,
+  );
+  addColumnIfMissing(db, "listening_history", "session_id", "TEXT");
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_listening_session_podcast
+     ON listening_history(session_id, podcast_id) WHERE msisdn IS NULL`,
+  );
 
   migrateUserPreferencesToMsisdn(db);
 }

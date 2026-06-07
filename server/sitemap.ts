@@ -1,4 +1,5 @@
-const ZOALCAST_API = "https://api.zoalcast.com/api";
+const ZOALCAST_API = process.env.VITE_API_BASE_URL ?? "https://api.zoalcast.com/api";
+const PORTAL_ID = process.env.VITE_PORTAL_ID ?? "6";
 const BASE_URL = process.env.SITE_URL ?? "https://isounds.sd";
 const CACHE_MS = 6 * 60 * 60 * 1000;
 
@@ -34,7 +35,7 @@ function xmlEscape(value: string): string {
 
 async function getCategoryUrls(): Promise<string[]> {
   try {
-    const res = await fetch(`${ZOALCAST_API}/portal/6/categories`);
+    const res = await fetch(`${ZOALCAST_API}/portal/${PORTAL_ID}/categories`);
     if (!res.ok) return [];
     const payload = (await res.json()) as {
       data?: Array<{ id?: number }>;

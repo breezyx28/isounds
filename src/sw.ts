@@ -29,18 +29,32 @@ registerRoute(
 );
 
 const staticCachePlugins = [
-  new CacheableResponsePlugin({ statuses: [0, 200] }),
+  new CacheableResponsePlugin({ statuses: [200] }),
   new ExpirationPlugin({
     maxEntries: 256,
     maxAgeSeconds: ONE_YEAR_SECONDS,
   }),
 ];
 
-/** Same-origin UI assets: JS, CSS, fonts, icons, screenshots, manifest. */
+/** PWA manifest — always check network so deploy metadata propagates. */
+registerRoute(
+  ({ url }) => url.pathname === "/manifest.json",
+  new NetworkFirst({
+    cacheName: "isounds-manifest",
+    networkTimeoutSeconds: 3,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({ maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 }),
+    ],
+  }),
+);
+
+/** Same-origin UI assets: JS, CSS, fonts, icons, screenshots (not manifest.json). */
 registerRoute(
   ({ request, url }) => {
     if (url.origin !== self.location.origin) return false;
     if (url.pathname.startsWith("/api/")) return false;
+    if (url.pathname === "/manifest.json") return false;
 
     return (
       request.destination === "script" ||
@@ -50,7 +64,7 @@ registerRoute(
       url.pathname.startsWith("/icons/") ||
       url.pathname.startsWith("/screenshots/") ||
       url.pathname.startsWith("/assets/") ||
-      /\.(woff2?|ttf|otf|eot|svg|png|jpg|jpeg|webp|gif|ico|webmanifest|json)$/i.test(
+      /\.(woff2?|ttf|otf|eot|svg|png|jpg|jpeg|webp|gif|ico|webmanifest)$/i.test(
         url.pathname,
       )
     );
@@ -58,21 +72,6 @@ registerRoute(
   new CacheFirst({
     cacheName: "isounds-static-ui",
     plugins: staticCachePlugins,
-  }),
-);
-
-/** Episode / CDN images — cache aggressively (not API JSON). */
-registerRoute(
-  ({ request }) => request.destination === "image",
-  new CacheFirst({
-    cacheName: "isounds-images",
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: 300,
-        maxAgeSeconds: 60 * 60 * 24 * 30,
-      }),
-    ],
   }),
 );
 

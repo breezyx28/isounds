@@ -1,6 +1,11 @@
-const ZOALCAST_API = "https://api.zoalcast.com/api";
+const ZOALCAST_API = process.env.VITE_API_BASE_URL ?? "https://api.zoalcast.com/api";
+const PORTAL_ID = process.env.VITE_PORTAL_ID ?? "6";
 const BASE_URL = process.env.SITE_URL ?? "https://isounds.sd";
 const DEFAULT_IMAGE = `${BASE_URL}/logos/isounds-icon-primary.svg`;
+const META_CACHE_TTL_MS = 10 * 60 * 1000;
+const META_FETCH_TIMEOUT_MS = 2000;
+
+const metaCache = new Map<string, { meta: Partial<RouteMeta>; expires: number }>();
 
 export interface RouteMeta {
   title: string;
@@ -82,9 +87,28 @@ function escapeHtml(input: string): string {
     .replaceAll("'", "&#39;");
 }
 
+function getCachedMeta(key: string): Partial<RouteMeta> | null {
+  const entry = metaCache.get(key);
+  if (!entry || entry.expires < Date.now()) {
+    metaCache.delete(key);
+    return null;
+  }
+  return entry.meta;
+}
+
+function setCachedMeta(key: string, meta: Partial<RouteMeta>) {
+  metaCache.set(key, { meta, expires: Date.now() + META_CACHE_TTL_MS });
+}
+
 async function resolvePodcastMeta(id: string): Promise<Partial<RouteMeta>> {
+  const cacheKey = `podcast:${id}`;
+  const cached = getCachedMeta(cacheKey);
+  if (cached) return cached;
+
   try {
-    const res = await fetch(`${ZOALCAST_API}/podcast/${id}`);
+    const res = await fetch(`${ZOALCAST_API}/podcast/${id}`, {
+      signal: AbortSignal.timeout(META_FETCH_TIMEOUT_MS),
+    });
     if (!res.ok) return {};
     const payload = (await res.json()) as { data?: Record<string, unknown> };
     const data = payload.data ?? {};
@@ -92,31 +116,43 @@ async function resolvePodcastMeta(id: string): Promise<Partial<RouteMeta>> {
     const rawDescription =
       typeof data.description === "string" ? data.description : undefined;
     const rawImage = typeof data.image === "string" ? data.image : undefined;
-    return {
+    const meta = {
       title: rawTitle ? `${rawTitle} — iSounds` : undefined,
       description: rawDescription ? rawDescription.slice(0, 160) : undefined,
       image: rawImage ?? undefined,
       type: "music.song",
     };
-  } catch {
+    setCachedMeta(cacheKey, meta);
+    return meta;
+  } catch (error) {
+    console.error(`[og] Podcast meta fetch failed for ${id}:`, error);
     return {};
   }
 }
 
 async function resolveCategoryMeta(id: string): Promise<Partial<RouteMeta>> {
+  const cacheKey = `category:${id}`;
+  const cached = getCachedMeta(cacheKey);
+  if (cached) return cached;
+
   try {
-    const res = await fetch(`${ZOALCAST_API}/portal/6/categories`);
+    const res = await fetch(`${ZOALCAST_API}/portal/${PORTAL_ID}/categories`, {
+      signal: AbortSignal.timeout(META_FETCH_TIMEOUT_MS),
+    });
     if (!res.ok) return {};
     const payload = (await res.json()) as {
       data?: Array<{ id?: number; name?: string }>;
     };
     const category = payload.data?.find((item) => String(item.id) === id);
     if (!category?.name) return {};
-    return {
+    const meta = {
       title: `${category.name} — iSounds`,
       description: `استمع إلى أحدث حلقات ${category.name} على iSounds`,
     };
-  } catch {
+    setCachedMeta(cacheKey, meta);
+    return meta;
+  } catch (error) {
+    console.error(`[og] Category meta fetch failed for ${id}:`, error);
     return {};
   }
 }

@@ -12,9 +12,12 @@ import {
   setShowMiniPlayer,
 } from "./playerSlice";
 
+const SEEK_THROTTLE_MS = 250;
+
 export function GlobalAudio() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastSavedAtRef = useRef(0);
+  const lastSeekDispatchRef = useRef(0);
   const lastViewEpisodeRef = useRef<number | null>(null);
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -28,9 +31,12 @@ export function GlobalAudio() {
     if (!audio) return;
 
     const onTimeUpdate = () => {
-      dispatch(seek(audio.currentTime));
-
       const now = Date.now();
+      if (now - lastSeekDispatchRef.current >= SEEK_THROTTLE_MS) {
+        lastSeekDispatchRef.current = now;
+        dispatch(seek(audio.currentTime));
+      }
+
       if (
         player.currentEpisode &&
         now - lastSavedAtRef.current >= 10_000 &&
@@ -68,7 +74,7 @@ export function GlobalAudio() {
     const audio = audioRef.current;
     const episode = player.currentEpisode;
     const token = auth.user?.token;
-    if (!audio || !episode || !token) return;
+    if (!audio || !episode || !token || !player.isPlaying) return;
 
     const src = getSoundUrl(episode.id, token);
     if (audio.src !== src) {
@@ -79,7 +85,7 @@ export function GlobalAudio() {
         void incrementViews(episode.id);
       }
     }
-  }, [auth.user?.token, incrementViews, player.currentEpisode]);
+  }, [auth.user?.token, incrementViews, player.currentEpisode, player.isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;

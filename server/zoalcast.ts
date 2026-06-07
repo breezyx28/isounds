@@ -20,7 +20,8 @@ export async function fetchCategories(): Promise<ZoalcastCategory[]> {
     if (!res.ok) return [];
     const payload = (await res.json()) as { data?: ZoalcastCategory[] };
     return (payload.data ?? []).filter((c) => typeof c.id === "number");
-  } catch {
+  } catch (error) {
+    console.error("[zoalcast] fetchCategories failed:", error);
     return [];
   }
 }
@@ -30,10 +31,14 @@ export async function fetchLatestPodcasts(categoryId?: number): Promise<CachedPo
     const params = new URLSearchParams({ criteria: "latest" });
     if (categoryId) params.set("category_id", String(categoryId));
     const res = await fetch(`${ZOALCAST_API}/podcast/${PORTAL_ID}/top?${params.toString()}`);
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[zoalcast] fetchLatestPodcasts ${res.status} for category ${categoryId ?? "all"}`);
+      return [];
+    }
     const payload = (await res.json()) as { data?: CachedPodcast[] };
     return payload.data ?? [];
-  } catch {
+  } catch (error) {
+    console.error("[zoalcast] fetchLatestPodcasts failed:", error);
     return [];
   }
 }
@@ -41,7 +46,10 @@ export async function fetchLatestPodcasts(categoryId?: number): Promise<CachedPo
 export async function fetchPodcastDetail(id: number): Promise<CachedPodcast | null> {
   try {
     const res = await fetch(`${ZOALCAST_API}/podcast/${id}`);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[zoalcast] fetchPodcastDetail ${res.status} for id ${id}`);
+      return null;
+    }
     const payload = (await res.json()) as { data?: CachedPodcast & { category?: { id: number } } };
     const podcast = payload.data;
     if (!podcast) return null;
@@ -52,7 +60,8 @@ export async function fetchPodcastDetail(id: number): Promise<CachedPodcast | nu
       image: podcast.image ?? undefined,
       created_at: podcast.created_at ?? undefined,
     };
-  } catch {
+  } catch (error) {
+    console.error(`[zoalcast] fetchPodcastDetail failed for id ${id}:`, error);
     return null;
   }
 }

@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { RootState } from "@/store/store";
 import type { Podcast } from "@/types/podcast";
 
 export interface PlayerState {
@@ -30,6 +31,13 @@ const playerSlice = createSlice({
       state.progress = 0;
       state.duration = 0;
       state.isPlaying = Boolean(action.payload);
+      state.showMiniPlayer = false;
+    },
+    prepareEpisode(state, action: PayloadAction<Podcast>) {
+      state.currentEpisode = action.payload;
+      state.progress = 0;
+      state.duration = 0;
+      state.isPlaying = false;
       state.showMiniPlayer = false;
     },
     play(state) {
@@ -65,6 +73,7 @@ const playerSlice = createSlice({
 
 export const {
   setEpisode,
+  prepareEpisode,
   play,
   pause,
   seek,
@@ -74,5 +83,16 @@ export const {
   setShowMiniPlayer,
   clearEpisode,
 } = playerSlice.actions;
+
+export const selectPlayerTransport = (state: RootState) => ({
+  isPlaying: state.player.isPlaying,
+  currentEpisode: state.player.currentEpisode,
+  showMiniPlayer: state.player.showMiniPlayer,
+});
+
+export const selectPlayerProgress = (state: RootState) => ({
+  progress: state.player.progress,
+  duration: state.player.duration,
+});
 
 export default playerSlice.reducer;

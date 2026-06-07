@@ -10,6 +10,7 @@ import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { useGetCategoriesQuery, useGetTopPodcastsQuery, useSearchPodcastsQuery } from "@/store/api";
 import { parseDuration } from "@/lib/format";
+import { asPodcastList } from "@/lib/podcasts";
 import type { Podcast, TopCriteria } from "@/types/podcast";
 import { cn } from "@/lib/utils";
 
@@ -21,13 +22,23 @@ function toPositiveInt(value: string | null, fallback: number): number {
 }
 
 function toNonNegativeInt(value: string | null, fallback: number): number {
+  if (value === null || value === "") return fallback;
   const n = Number(value);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : fallback;
+}
+
+function parseSortParam(value: string | null): TopCriteria {
+  if (value === "latest" || value === "liked" || value === "viewed") return value;
+  return "latest";
 }
 
 function useDebouncedValue<T>(value: T, ms = 300) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
+    if (typeof value === "string" && value.trim().length === 0) {
+      setDebounced(value);
+      return;
+    }
     const timer = window.setTimeout(() => setDebounced(value), ms);
     return () => window.clearTimeout(timer);
   }, [ms, value]);
@@ -46,7 +57,7 @@ export default function ExplorePage() {
   const durationMax = Math.max(durationMin, durationMaxRaw);
   const filters: ExploreFilters = {
     category: params.get("category") ?? "",
-    sort: (params.get("sort") as TopCriteria) ?? "latest",
+    sort: parseSortParam(params.get("sort")),
     durationMin,
     durationMax,
     from: params.get("from") ?? "",
@@ -54,34 +65,32 @@ export default function ExplorePage() {
   };
 
   const debouncedQ = useDebouncedValue(q, 300);
-  const isSearching = debouncedQ.trim().length > 0;
+  const isSearching = q.trim().length > 0;
   const { data: categories = [] } = useGetCategoriesQuery();
 
+  const topQueryArgs = useMemo(() => {
+    const args: { criteria: TopCriteria; categoryId?: number } = {
+      criteria: filters.sort,
+    };
+    if (filters.category) args.categoryId = Number(filters.category);
+    return args;
+  }, [filters.sort, filters.category]);
+
   const searchQuery = useSearchPodcastsQuery(
-    { q: debouncedQ, page },
+    { q: debouncedQ.trim(), page },
     { skip: !isSearching },
   );
-  const topQuery = useGetTopPodcastsQuery(
-    {
-      criteria: filters.sort,
-      categoryId: filters.category ? Number(filters.category) : undefined,
-    },
-    { skip: isSearching },
-  );
+  const topQuery = useGetTopPodcastsQuery(topQueryArgs, { skip: isSearching });
 
   const rawResults = useMemo<Podcast[]>(() => {
-    if (isSearching) return searchQuery.data?.podcasts ?? [];
-    return topQuery.data ?? [];
+    if (isSearching) return asPodcastList(searchQuery.data?.podcasts);
+    return asPodcastList(topQuery.data);
   }, [isSearching, searchQuery.data?.podcasts, topQuery.data]);
 
   const filtered = useMemo(() => {
-    const minSecs = filters.durationMin * 60;
-    const maxSecs = filters.durationMax * 60;
-    const hasExtraFilters =
-      filters.durationMin > 0 ||
-      filters.durationMax < 999 ||
-      Boolean(filters.from) ||
-      Boolean(filters.to);
+    const hasDurationFilter = params.has("duration_min") || params.has("duration_max");
+    const hasDateFilter = params.has("from") || params.has("to");
+    const hasExtraFilters = hasDurationFilter || hasDateFilter;
 
     let list = rawResults;
     if (isSearching && filters.category) {
@@ -92,9 +101,14 @@ export default function ExplorePage() {
 
     if (!hasExtraFilters) return list;
 
+    const minSecs = filters.durationMin * 60;
+    const maxSecs = filters.durationMax * 60;
+
     return list.filter((podcast) => {
-      const dur = parseDuration(podcast.duration);
-      if (dur < minSecs || dur > maxSecs) return false;
+      if (hasDurationFilter) {
+        const dur = parseDuration(podcast.duration);
+        if (dur < minSecs || dur > maxSecs) return false;
+      }
       if (filters.from && podcast.created_at && new Date(podcast.created_at) < new Date(filters.from)) {
         return false;
       }
@@ -103,9 +117,13 @@ export default function ExplorePage() {
       }
       return true;
     });
-  }, [filters, isSearching, rawResults]);
+  }, [filters, isSearching, params, rawResults]);
 
-  const isLoading = isSearching ? searchQuery.isLoading : topQuery.isLoading;
+  const activeQuery = isSearching ? searchQuery : topQuery;
+  const hasResults = filtered.length > 0;
+  const isLoading =
+    !hasResults &&
+    (activeQuery.isLoading || activeQuery.isFetching);
   const isError = isSearching ? searchQuery.isError : topQuery.isError;
   const refetch = isSearching ? searchQuery.refetch : topQuery.refetch;
   const lastPage = isSearching ? (searchQuery.data?.lastPage ?? 1) : 1;
@@ -191,7 +209,7 @@ export default function ExplorePage() {
           </div>
           <div>
             {isLoading && (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, idx) => (
                   <EpisodeCardSkeleton key={idx} />
                 ))}
@@ -207,21 +225,32 @@ export default function ExplorePage() {
               />
             )}
 
-            {!isLoading && !isError && filtered.length === 0 && (
+            {!isLoading && !isError && !hasResults && (
               <EmptyState
                 code="empty"
                 title={t("search:empty")}
                 actionLabel={t("common:nav.explore", { defaultValue: "Browse all" })}
-                onAction={() => patchParams({ q: "", page: 1, category: "", from: "", to: "" })}
+                onAction={() =>
+                  patchParams({
+                    q: "",
+                    page: 1,
+                    category: "",
+                    sort: "latest",
+                    from: "",
+                    to: "",
+                    duration_min: "",
+                    duration_max: "",
+                  })
+                }
               />
             )}
 
-            {!isLoading && !isError && filtered.length > 0 && (
+            {!isLoading && !isError && hasResults && (
               <>
                 <div
                   className={
                     view === "grid"
-                      ? "grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
+                      ? "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
                       : "space-y-3"
                   }
                 >

@@ -53,6 +53,63 @@ async function resolvePodcastCategory(
   return detail.category_id;
 }
 
+async function resolvePodcastCategoriesParallel(
+  db: Database,
+  podcastIds: number[],
+  concurrency = 5,
+) {
+  for (let i = 0; i < podcastIds.length; i += concurrency) {
+    const chunk = podcastIds.slice(i, i + concurrency);
+    await Promise.all(chunk.map((id) => resolvePodcastCategory(db, id)));
+  }
+}
+
+function collectUnresolvedPodcastIds(db: Database, msisdn: string, since: number): number[] {
+  const ids = new Set<number>();
+  const sources = [
+    db
+      .query(
+        `SELECT podcast_id FROM visits WHERE msisdn = ? AND podcast_id IS NOT NULL AND created_at >= ?`,
+      )
+      .all(msisdn, since) as Array<{ podcast_id: number }>,
+    db
+      .query(
+        `SELECT podcast_id FROM listening_history WHERE msisdn = ? AND updated_at >= ?`,
+      )
+      .all(msisdn, since) as Array<{ podcast_id: number }>,
+    db
+      .query(
+        `SELECT podcast_id FROM bookmarks WHERE msisdn = ? AND created_at >= ?`,
+      )
+      .all(msisdn, since) as Array<{ podcast_id: number }>,
+    db
+      .query(
+        `SELECT podcast_id FROM ratings WHERE msisdn = ? AND created_at >= ?`,
+      )
+      .all(msisdn, since) as Array<{ podcast_id: number }>,
+  ];
+
+  for (const rows of sources) {
+    for (const row of rows) {
+      if (getPodcastCategoryFromCache(db, row.podcast_id) == null) {
+        ids.add(row.podcast_id);
+      }
+    }
+  }
+
+  return [...ids];
+}
+
+function parseSignalsJson(raw: string | null): Record<string, number> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as Record<string, number>;
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 function collectVisitSignals(db: Database, msisdn: string, since: number): SignalEvent[] {
   const rows = db
     .query(
@@ -189,22 +246,9 @@ function collectRatingSignals(db: Database, msisdn: string, since: number): Sign
 export async function computeUserAffinities(db: Database, msisdn: string) {
   const since = nowSeconds() - WINDOW_SECONDS;
 
-  const visitEvents = collectVisitSignals(db, msisdn, since);
-
-  const unresolvedPodcastIds = new Set<number>();
-  const visitRows = db
-    .query(
-      `SELECT podcast_id FROM visits WHERE msisdn = ? AND podcast_id IS NOT NULL AND created_at >= ?`,
-    )
-    .all(msisdn, since) as Array<{ podcast_id: number }>;
-  for (const row of visitRows) {
-    if (getPodcastCategoryFromCache(db, row.podcast_id) == null) {
-      unresolvedPodcastIds.add(row.podcast_id);
-    }
-  }
-
-  for (const podcastId of unresolvedPodcastIds) {
-    await resolvePodcastCategory(db, podcastId);
+  const unresolvedIds = collectUnresolvedPodcastIds(db, msisdn, since);
+  if (unresolvedIds.length > 0) {
+    await resolvePodcastCategoriesParallel(db, unresolvedIds);
   }
 
   const allEvents = [
@@ -214,7 +258,7 @@ export async function computeUserAffinities(db: Database, msisdn: string) {
     ...collectRatingSignals(db, msisdn, since),
   ];
 
-  if (allEvents.length === 0 && visitEvents.length === 0) {
+  if (allEvents.length === 0) {
     return { eventCount: 0, categories: [] as Array<{ category_id: number; score: number }> };
   }
 
@@ -257,27 +301,36 @@ export async function computeUserAffinities(db: Database, msisdn: string) {
 
   const results: Array<{ category_id: number; score: number }> = [];
 
-  for (const [categoryId, data] of rawScores) {
-    const settings = settingsMap.get(categoryId);
-    if (settings?.hidden) {
-      upsert.run(msisdn, categoryId, 0, JSON.stringify(data.signals));
-      results.push({ category_id: categoryId, score: 0 });
-      continue;
+  const writeAffinities = db.transaction(() => {
+    for (const [categoryId, data] of rawScores) {
+      const settings = settingsMap.get(categoryId);
+      if (settings?.hidden) {
+        upsert.run(msisdn, categoryId, 0, JSON.stringify(data.signals));
+        results.push({ category_id: categoryId, score: 0 });
+        continue;
+      }
+
+      let normalized = maxScore > 0 ? (data.score / maxScore) * 100 : 0;
+      if (settings?.pinned) normalized = Math.max(normalized, PINNED_MIN_SCORE);
+
+      upsert.run(msisdn, categoryId, normalized, JSON.stringify(data.signals));
+      results.push({ category_id: categoryId, score: Math.round(normalized * 10) / 10 });
     }
 
-    let normalized = maxScore > 0 ? (data.score / maxScore) * 100 : 0;
-    if (settings?.pinned) normalized = Math.max(normalized, PINNED_MIN_SCORE);
-
-    upsert.run(msisdn, categoryId, normalized, JSON.stringify(data.signals));
-    results.push({ category_id: categoryId, score: Math.round(normalized * 10) / 10 });
-  }
-
-  for (const row of settingsRows) {
-    if (row.pinned === 1 && !rawScores.has(row.category_id)) {
-      upsert.run(msisdn, row.category_id, PINNED_MIN_SCORE, JSON.stringify({ pinned: PINNED_MIN_SCORE }));
-      results.push({ category_id: row.category_id, score: PINNED_MIN_SCORE });
+    for (const row of settingsRows) {
+      if (row.pinned === 1 && !rawScores.has(row.category_id)) {
+        upsert.run(
+          msisdn,
+          row.category_id,
+          PINNED_MIN_SCORE,
+          JSON.stringify({ pinned: PINNED_MIN_SCORE }),
+        );
+        results.push({ category_id: row.category_id, score: PINNED_MIN_SCORE });
+      }
     }
-  }
+  });
+
+  writeAffinities();
 
   results.sort((a, b) => b.score - a.score);
 
@@ -355,7 +408,7 @@ export function getPersonalizationProfile(db: Database, msisdn: string) {
     affinities: affinities.map((row) => ({
       category_id: row.category_id,
       score: row.score,
-      signals: row.signals_json ? JSON.parse(row.signals_json) : {},
+      signals: parseSignalsJson(row.signals_json),
     })),
     settings: settings.map((row) => ({
       category_id: row.category_id,

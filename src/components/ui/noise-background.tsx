@@ -110,7 +110,7 @@ export function NoiseBackground({
   }, [speed]);
 
   useAnimationFrame((time) => {
-    if (!animating || !containerRef.current) return;
+    if (!animating || !containerRef.current || document.hidden) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const maxX = rect.width;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   Navigate,
   Outlet,
@@ -12,6 +12,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { applyDocumentLanguage } from "@/i18n";
 import { applyTheme } from "@/lib/theme";
+import { lazyRoute } from "@/lib/lazyRoute";
 import { useAppSelector } from "@/store/hooks";
 import { GlobalAudio } from "@/features/player/GlobalAudio";
 import { WelcomeOverlay } from "@/components/shared/WelcomeOverlay";
@@ -23,24 +24,25 @@ import { FaviconManager } from "@/components/shared/FaviconManager";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
-import HomePage from "@/pages/HomePage";
-import CategoriesPage from "@/pages/CategoriesPage";
-import CategoryPage from "@/pages/CategoryPage";
-import EpisodeDetailPage from "@/pages/EpisodeDetailPage";
-import NotFoundPage from "@/pages/NotFoundPage";
-import UnauthorizedPage from "@/pages/UnauthorizedPage";
-import ExplorePage from "@/pages/ExplorePage";
-import LibraryPage from "@/pages/LibraryPage";
-import SavedPodcastsPage from "@/pages/SavedPodcastsPage";
-import PersonalizationPage from "@/pages/PersonalizationPage";
-import SubscribePage from "@/pages/SubscribePage";
-import LoginPage from "@/pages/LoginPage";
-import ContactPage from "@/pages/ContactPage";
 import LandingPage from "@/pages/LandingPage";
-import AboutPage from "@/pages/AboutPage";
-import HelpPage from "@/pages/HelpPage";
-import TermsPage from "@/pages/TermsPage";
-import PrivacyPage from "@/pages/PrivacyPage";
+
+const HomePage = lazyRoute(() => import("@/pages/HomePage"), "Home");
+const CategoriesPage = lazyRoute(() => import("@/pages/CategoriesPage"), "Categories");
+const CategoryPage = lazyRoute(() => import("@/pages/CategoryPage"), "Category");
+const EpisodeDetailPage = lazyRoute(() => import("@/pages/EpisodeDetailPage"), "Episode");
+const NotFoundPage = lazyRoute(() => import("@/pages/NotFoundPage"), "NotFound");
+const UnauthorizedPage = lazyRoute(() => import("@/pages/UnauthorizedPage"), "Unauthorized");
+const ExplorePage = lazyRoute(() => import("@/pages/ExplorePage"), "Explore");
+const LibraryPage = lazyRoute(() => import("@/pages/LibraryPage"), "Library");
+const SavedPodcastsPage = lazyRoute(() => import("@/pages/SavedPodcastsPage"), "Saved");
+const PersonalizationPage = lazyRoute(() => import("@/pages/PersonalizationPage"), "Personalization");
+const SubscribePage = lazyRoute(() => import("@/pages/SubscribePage"), "Subscribe");
+const LoginPage = lazyRoute(() => import("@/pages/LoginPage"), "Login");
+const ContactPage = lazyRoute(() => import("@/pages/ContactPage"), "Contact");
+const AboutPage = lazyRoute(() => import("@/pages/AboutPage"), "About");
+const HelpPage = lazyRoute(() => import("@/pages/HelpPage"), "Help");
+const TermsPage = lazyRoute(() => import("@/pages/TermsPage"), "Terms");
+const PrivacyPage = lazyRoute(() => import("@/pages/PrivacyPage"), "Privacy");
 
 function RequireSubscribed() {
   const authStatus = useAppSelector((s) => s.auth.status);
@@ -94,9 +96,11 @@ function AppBootstrap() {
     return () => window.clearTimeout(timer);
   }, [authStatus]);
 
+  const handleAuthResolved = useCallback(() => setIsBootstrapping(false), []);
+
   return (
     <>
-      <SubscriptionChecker onResolved={() => setIsBootstrapping(false)} />
+      <SubscriptionChecker onResolved={handleAuthResolved} />
       {isBootstrapping ? (
         <PageLoader />
       ) : (
@@ -118,34 +122,36 @@ export default function App() {
       <PwaInstallBanner />
       <Toaster theme="light" richColors />
       <ScrollToTop />
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/home" element={<Navigate to="/" replace />} />
-          <Route element={<AnimatedOutlet />}>
-            <Route index element={<LandingPage />} />
-            <Route path="browse" element={<HomePage />} />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="categories/:categoryId" element={<CategoryPage />} />
-            <Route path="podcasts/:id" element={<EpisodeDetailPage />} />
-            <Route path="explore" element={<ExplorePage />} />
-            <Route path="library" element={<RequireSubscribed />}>
-              <Route index element={<LibraryPage />} />
-              <Route path="saved" element={<SavedPodcastsPage />} />
-              <Route path="personalization" element={<PersonalizationPage />} />
-              <Route path="history" element={<LibraryPage />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route element={<AnimatedOutlet />}>
+              <Route index element={<LandingPage />} />
+              <Route path="browse" element={<HomePage />} />
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="categories/:categoryId" element={<CategoryPage />} />
+              <Route path="podcasts/:id" element={<EpisodeDetailPage />} />
+              <Route path="explore" element={<ExplorePage />} />
+              <Route path="library" element={<RequireSubscribed />}>
+                <Route index element={<LibraryPage />} />
+                <Route path="saved" element={<SavedPodcastsPage />} />
+                <Route path="personalization" element={<PersonalizationPage />} />
+                <Route path="history" element={<LibraryPage />} />
+              </Route>
+              <Route path="subscribe" element={<SubscribePage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="contact" element={<ContactPage />} />
+              <Route path="help" element={<HelpPage />} />
+              <Route path="terms" element={<TermsPage />} />
+              <Route path="privacy" element={<PrivacyPage />} />
+              <Route path="unauthorized" element={<UnauthorizedPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
-            <Route path="subscribe" element={<SubscribePage />} />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="about" element={<AboutPage />} />
-            <Route path="contact" element={<ContactPage />} />
-            <Route path="help" element={<HelpPage />} />
-            <Route path="terms" element={<TermsPage />} />
-            <Route path="privacy" element={<PrivacyPage />} />
-            <Route path="unauthorized" element={<UnauthorizedPage />} />
-            <Route path="*" element={<NotFoundPage />} />
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </>
   );
 }

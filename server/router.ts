@@ -1,10 +1,16 @@
 import type { Database } from "bun:sqlite";
 import {
+  buildSessionClearCookie,
+  buildSessionSetCookie,
+  corsOrigin,
   getRequestIdentity,
+  issueSessionToken,
   requireMsisdn,
   requireSubscribed,
   touchUser,
+  verifyZoalcastToken,
 } from "./auth";
+import { checkRateLimit, clientIp } from "./rateLimit";
 import {
   computeUserAffinities,
   getPersonalizationProfile,
@@ -17,21 +23,44 @@ import { getVapidPublicKey, isPushConfigured } from "./push";
 import { parseVisitPath } from "./visitParser";
 import { fetchPodcastDetail, upsertPodcastCache } from "./zoalcast";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, X-ISounds-Msisdn, X-ISounds-Subscribed",
-};
+function corsHeaders(): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin": corsOrigin(),
+    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type, X-ISounds-Msisdn, X-ISounds-Subscribed, X-Admin-Key",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
 
-function json(data: unknown, status = 200) {
+function json(data: unknown, status = 200, extraHeaders?: Record<string, string>) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json",
-      ...CORS_HEADERS,
+      ...corsHeaders(),
+      ...extraHeaders,
     },
   });
+}
+
+function rateLimited(path: string, req: Request): Response | null {
+  const limitedPaths = ["/visits", "/search-history", "/pwa-events"];
+  if (!limitedPaths.includes(path) || req.method !== "POST") return null;
+
+  const { allowed, retryAfterMs } = checkRateLimit(
+    `${clientIp(req)}:${path}`,
+    120,
+    60_000,
+  );
+  if (!allowed) {
+    return json(
+      { error: "rate_limited", retry_after_ms: retryAfterMs },
+      429,
+      { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) },
+    );
+  }
+  return null;
 }
 
 function ratingDistribution(
@@ -72,13 +101,39 @@ function getRatingForUser(
 }
 
 export async function router(req: Request, db: Database): Promise<Response> {
-  const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/api\/local/, "") || "/";
-  const identity = getRequestIdentity(req);
+  try {
+    const url = new URL(req.url);
+    const path = url.pathname.replace(/^\/api\/local/, "") || "/";
+    const identity = getRequestIdentity(req);
 
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: CORS_HEADERS });
-  }
+    if (req.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders() });
+    }
+
+    const limited = rateLimited(path, req);
+    if (limited) return limited;
+
+    if (path === "/auth/session" && req.method === "POST") {
+      const body = (await req.json()) as { token?: string; msisdn?: string };
+      const msisdn = body.msisdn?.trim();
+      const token = body.token?.trim();
+      if (!msisdn || !token) return json({ error: "token and msisdn required" }, 400);
+
+      const verified = await verifyZoalcastToken(token, msisdn);
+      if (!verified.ok) return json({ error: "invalid token" }, 401);
+
+      const sessionToken = issueSessionToken(msisdn, verified.subscribed);
+      touchUser(db, msisdn, verified.subscribed);
+      return json(
+        { ok: true, msisdn, subscribed: verified.subscribed },
+        200,
+        { "Set-Cookie": buildSessionSetCookie(sessionToken) },
+      );
+    }
+
+    if (path === "/auth/session" && req.method === "DELETE") {
+      return json({ ok: true }, 200, { "Set-Cookie": buildSessionClearCookie() });
+    }
 
   if (path === "/sessions/heartbeat" && req.method === "POST") {
     const msisdn = requireMsisdn(req);
@@ -291,6 +346,7 @@ export async function router(req: Request, db: Database): Promise<Response> {
   if (path === "/listening-history" && req.method === "GET") {
     const podcastId = url.searchParams.get("podcast_id");
     const msisdn = identity.msisdn;
+    const sessionId = url.searchParams.get("session_id")?.trim();
 
     if (podcastId) {
       const row = msisdn
@@ -299,11 +355,13 @@ export async function router(req: Request, db: Database): Promise<Response> {
               "SELECT * FROM listening_history WHERE podcast_id = ? AND msisdn = ? LIMIT 1",
             )
             .get(podcastId, msisdn)
-        : db
-            .query(
-              "SELECT * FROM listening_history WHERE podcast_id = ? AND msisdn IS NULL LIMIT 1",
-            )
-            .get(podcastId);
+        : sessionId
+          ? db
+              .query(
+                "SELECT * FROM listening_history WHERE podcast_id = ? AND session_id = ? AND msisdn IS NULL LIMIT 1",
+              )
+              .get(podcastId, sessionId)
+          : null;
       return json(row ?? null);
     }
 
@@ -313,11 +371,13 @@ export async function router(req: Request, db: Database): Promise<Response> {
             "SELECT * FROM listening_history WHERE msisdn = ? ORDER BY updated_at DESC LIMIT 50",
           )
           .all(msisdn)
-      : db
-          .query(
-            "SELECT * FROM listening_history WHERE msisdn IS NULL ORDER BY updated_at DESC LIMIT 50",
-          )
-          .all();
+      : sessionId
+        ? db
+            .query(
+              "SELECT * FROM listening_history WHERE session_id = ? AND msisdn IS NULL ORDER BY updated_at DESC LIMIT 50",
+            )
+            .all(sessionId)
+        : [];
     return json(rows);
   }
 
@@ -326,8 +386,10 @@ export async function router(req: Request, db: Database): Promise<Response> {
       podcast_id: number;
       position_seconds: number;
       duration_seconds: number;
+      session_id?: string;
     };
     const msisdn = identity.msisdn;
+    const sessionId = body.session_id?.trim();
 
     if (msisdn) {
       const existing = db
@@ -351,16 +413,30 @@ export async function router(req: Request, db: Database): Promise<Response> {
           [body.podcast_id, msisdn, body.position_seconds, body.duration_seconds],
         );
       }
+    } else if (sessionId) {
+      const existing = db
+        .query(
+          "SELECT id FROM listening_history WHERE podcast_id = ? AND session_id = ? AND msisdn IS NULL LIMIT 1",
+        )
+        .get(body.podcast_id, sessionId);
+      if (existing) {
+        db.run(
+          `UPDATE listening_history SET
+             position_seconds = ?,
+             duration_seconds = ?,
+             updated_at = unixepoch()
+           WHERE podcast_id = ? AND session_id = ? AND msisdn IS NULL`,
+          [body.position_seconds, body.duration_seconds, body.podcast_id, sessionId],
+        );
+      } else {
+        db.run(
+          `INSERT INTO listening_history (podcast_id, session_id, position_seconds, duration_seconds, updated_at)
+           VALUES (?, ?, ?, ?, unixepoch())`,
+          [body.podcast_id, sessionId, body.position_seconds, body.duration_seconds],
+        );
+      }
     } else {
-      db.run(
-        `INSERT INTO listening_history (podcast_id, position_seconds, duration_seconds, updated_at)
-         VALUES (?, ?, ?, unixepoch())
-         ON CONFLICT(podcast_id) DO UPDATE SET
-           position_seconds = excluded.position_seconds,
-           duration_seconds = excluded.duration_seconds,
-           updated_at = unixepoch()`,
-        [body.podcast_id, body.position_seconds, body.duration_seconds],
-      );
+      return json({ error: "session_id required for anonymous history" }, 400);
     }
     return json({ ok: true });
   }
@@ -469,6 +545,11 @@ export async function router(req: Request, db: Database): Promise<Response> {
   }
 
   if (path === "/complaints" && req.method === "GET") {
+    const adminKey = process.env.ADMIN_API_KEY;
+    const provided = req.headers.get("X-Admin-Key");
+    if (!adminKey || provided !== adminKey) {
+      return json({ error: "unauthorized" }, 401);
+    }
     const rows = db.query("SELECT * FROM complaints ORDER BY created_at DESC").all();
     return json(rows);
   }
@@ -521,7 +602,6 @@ export async function router(req: Request, db: Database): Promise<Response> {
       hidden: body.hidden,
       push_enabled: body.push_enabled,
     });
-    void computeUserAffinities(db, msisdn);
     return json({ ok: true, profile: getPersonalizationProfile(db, msisdn) });
   }
 
@@ -551,18 +631,28 @@ export async function router(req: Request, db: Database): Promise<Response> {
     if (!body.endpoint?.trim() || !body.keys?.p256dh || !body.keys?.auth) {
       return json({ error: "invalid subscription" }, 400);
     }
+
+    const endpoint = body.endpoint.trim();
+    const existing = db
+      .query("SELECT msisdn FROM push_subscriptions WHERE endpoint = ? LIMIT 1")
+      .get(endpoint) as { msisdn?: string } | null;
+
+    if (existing?.msisdn && existing.msisdn !== msisdn) {
+      return json({ error: "endpoint belongs to another user" }, 409);
+    }
+
     db.run(
       `INSERT INTO push_subscriptions (msisdn, endpoint, p256dh, auth, user_agent, created_at, last_used_at)
        VALUES (?, ?, ?, ?, ?, unixepoch(), unixepoch())
        ON CONFLICT(endpoint) DO UPDATE SET
-         msisdn = excluded.msisdn,
          p256dh = excluded.p256dh,
          auth = excluded.auth,
          user_agent = excluded.user_agent,
-         last_used_at = unixepoch()`,
+         last_used_at = unixepoch()
+       WHERE push_subscriptions.msisdn = excluded.msisdn`,
       [
         msisdn,
-        body.endpoint.trim(),
+        endpoint,
         body.keys.p256dh,
         body.keys.auth,
         body.user_agent ?? req.headers.get("User-Agent"),
@@ -604,5 +694,9 @@ export async function router(req: Request, db: Database): Promise<Response> {
     });
   }
 
-  return json({ error: "Not implemented", path }, 501);
+    return json({ error: "Not implemented", path }, 501);
+  } catch (error) {
+    console.error("[router] Unhandled error:", error);
+    return json({ error: "internal_error" }, 500);
+  }
 }

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "iconsax-react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import { useTranslation } from "react-i18next";
@@ -103,13 +103,31 @@ const fadeUpCard = (delay: number, reduced: boolean): Variants => ({
   },
 });
 
+const staggerContainer: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.05, delayChildren: 0 },
+  },
+};
+
 export function LandingHeroSection() {
   const { t } = useTranslation("common");
   const prefersReducedMotion = useReducedMotion();
-  const delays = useMemo(
-    () => buildHeroDelays(Boolean(prefersReducedMotion)),
-    [prefersReducedMotion],
-  );
+  const reduced = Boolean(prefersReducedMotion);
+  const [animateHero, setAnimateHero] = useState(reduced);
+  const delays = useMemo(() => buildHeroDelays(reduced), [reduced]);
+
+  useEffect(() => {
+    if (reduced) return;
+    let innerId = 0;
+    const outerId = requestAnimationFrame(() => {
+      innerId = requestAnimationFrame(() => setAnimateHero(true));
+    });
+    return () => {
+      cancelAnimationFrame(outerId);
+      cancelAnimationFrame(innerId);
+    };
+  }, [reduced]);
 
   return (
     <section
@@ -122,23 +140,24 @@ export function LandingHeroSection() {
         <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           <motion.div
             className="hero-content flex w-full max-w-[600px] flex-col items-start justify-between gap-6 sm:gap-8 lg:max-h-[700px] lg:min-h-[560px] lg:gap-10"
+            variants={staggerContainer}
             initial="hidden"
-            animate="show"
+            animate={animateHero ? "show" : "hidden"}
           >
             <h1 className="w-full max-w-[min(100%,330px)] text-[clamp(3.25rem,17vw,4.5rem)] font-black uppercase leading-none lg:max-w-[300px] lg:text-[72px]">
-              <motion.span
-                className="inline-block"
-                variants={fadeUp(delays.logo, DURATIONS.logo, Boolean(prefersReducedMotion))}
-              >
-                <AnimatedIsoundFullLogo
-                  direction="ltr"
-                  className="hover:scale-none"
-                  gap={8}
-                  size="min(100%, 400px)"
-                  letterSpacing={10}
-                  disableHoverEffect
-                />
-              </motion.span>
+              <span className="inline-block">
+                {animateHero && (
+                  <AnimatedIsoundFullLogo
+                    key="hero-logo"
+                    direction="ltr"
+                    className="hover:scale-none"
+                    gap={8}
+                    size="min(100%, 400px)"
+                    letterSpacing={10}
+                    disableHoverEffect
+                  />
+                )}
+              </span>
               <br />
               <DiaTextReveal
                 className="text-[clamp(2.5rem,14vw,3.75rem)] !text-black font-black uppercase leading-none lg:text-[60px]"
@@ -155,7 +174,7 @@ export function LandingHeroSection() {
               variants={fadeUp(
                 delays.subcopy,
                 DURATIONS.subcopy,
-                Boolean(prefersReducedMotion),
+                reduced,
               )}
             >
               {t("landing.hero.subcopy")}
@@ -166,7 +185,7 @@ export function LandingHeroSection() {
                   variants={fadeUp(
                     delays.partnerZain,
                     DURATIONS.partner,
-                    Boolean(prefersReducedMotion),
+                    reduced,
                   )}
                 >
                   <HeroCompanyCards
@@ -180,7 +199,7 @@ export function LandingHeroSection() {
                   variants={fadeUp(
                     delays.partnerOxygen,
                     DURATIONS.partner,
-                    Boolean(prefersReducedMotion),
+                    reduced,
                   )}
                 >
                   <HeroCompanyCards
@@ -194,7 +213,7 @@ export function LandingHeroSection() {
                   variants={fadeUp(
                     delays.subscribe,
                     DURATIONS.subscribe,
-                    Boolean(prefersReducedMotion),
+                    reduced,
                   )}
                 >
                   <GradientBorderButton className="group relative px-6 py-4 text-[12px] font-extrabold uppercase leading-none tracking-wider sm:px-8 sm:py-5 sm:text-[14px]">
@@ -203,7 +222,7 @@ export function LandingHeroSection() {
                       <ArrowRight
                         size={16}
                         color="purple"
-                        className="transition-transform duration-300 group-hover:translate-x-1"
+                        className="transition-transform rtl:rotate-180 duration-300 ltr:group-hover:translate-x-1 rtl:group-hover:translate-x-[-3px]"
                       />
                     </div>
                   </GradientBorderButton>
@@ -215,11 +234,12 @@ export function LandingHeroSection() {
           <div className="w-full max-w-[500px] flex-1 lg:max-h-[700px]">
             <motion.div
               className="grid grid-cols-2 gap-4 sm:gap-6"
+              variants={staggerContainer}
               initial="hidden"
-              animate="show"
+              animate={animateHero ? "show" : "hidden"}
             >
               <motion.div
-                variants={fadeUpCard(delays.cardTallLeft, Boolean(prefersReducedMotion))}
+                variants={fadeUpCard(delays.cardTallLeft, reduced)}
                 className="row-span-2 col-start-1 row-start-1"
               >
                 <HeroCardTall
@@ -242,17 +262,17 @@ export function LandingHeroSection() {
                 />
               </motion.div>
               <motion.div
-                variants={fadeUpCard(delays.cardSmallTop, Boolean(prefersReducedMotion))}
+                variants={fadeUpCard(delays.cardSmallTop, reduced)}
               >
                 <HeroCardSmall progress={40} icon="microphone" />
               </motion.div>
               <motion.div
-                variants={fadeUpCard(delays.cardSmallBottom, Boolean(prefersReducedMotion))}
+                variants={fadeUpCard(delays.cardSmallBottom, reduced)}
               >
                 <HeroCardSmall icon="video" />
               </motion.div>
               <motion.div
-                variants={fadeUpCard(delays.cardTallRight, Boolean(prefersReducedMotion))}
+                variants={fadeUpCard(delays.cardTallRight, reduced)}
                 className="row-span-2 col-start-2 row-start-2"
               >
                 <HeroCardTall

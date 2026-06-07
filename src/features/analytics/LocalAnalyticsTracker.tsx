@@ -9,6 +9,7 @@ import { getOrCreateSessionId } from "@/lib/localIdentity";
 import { parseRouteVisit } from "@/lib/visitAnalytics";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
+const VISIT_DEBOUNCE_MS = 1500;
 
 export function LocalAnalyticsTracker() {
   const location = useLocation();
@@ -16,6 +17,8 @@ export function LocalAnalyticsTracker() {
   const [heartbeat] = useSessionHeartbeatMutation();
   const [recordVisit] = useRecordVisitMutation();
   const heartbeatTimer = useRef<number | null>(null);
+  const lastRecordedPath = useRef<string | null>(null);
+  const visitDebounceTimer = useRef<number | null>(null);
 
   useEffect(() => {
     if (authStatus !== "subscribed") return;
@@ -45,17 +48,36 @@ export function LocalAnalyticsTracker() {
   }, [authStatus, heartbeat]);
 
   useEffect(() => {
-    const sessionId = getOrCreateSessionId();
     const path = `${location.pathname}${location.search}`;
-    const meta = parseRouteVisit(location.pathname, location.search);
 
-    void recordVisit({
-      session_id: sessionId,
-      path,
-      category_id: meta.category_id,
-      podcast_id: meta.podcast_id,
-      event_type: meta.event_type,
-    });
+    if (lastRecordedPath.current === path) return;
+
+    if (visitDebounceTimer.current) {
+      window.clearTimeout(visitDebounceTimer.current);
+    }
+
+    visitDebounceTimer.current = window.setTimeout(() => {
+      const currentPath = `${location.pathname}${location.search}`;
+      if (lastRecordedPath.current === currentPath) return;
+
+      lastRecordedPath.current = currentPath;
+      const sessionId = getOrCreateSessionId();
+      const meta = parseRouteVisit(location.pathname, location.search);
+
+      void recordVisit({
+        session_id: sessionId,
+        path: currentPath,
+        category_id: meta.category_id,
+        podcast_id: meta.podcast_id,
+        event_type: meta.event_type,
+      });
+    }, VISIT_DEBOUNCE_MS);
+
+    return () => {
+      if (visitDebounceTimer.current) {
+        window.clearTimeout(visitDebounceTimer.current);
+      }
+    };
   }, [location.pathname, location.search, recordVisit]);
 
   return null;

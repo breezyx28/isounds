@@ -139,7 +139,13 @@ export function HeroCardTall({ image, slides: slidesProp, className }: HeroCardT
   useEffect(() => {
     if (!canAutoplay) return;
 
+    const onVisibility = () => {
+      if (document.hidden) setTextVisible(true);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     const timer = setInterval(() => {
+      if (document.hidden) return;
       setTextVisible(false);
       advanceTimeoutRef.current = setTimeout(() => {
         setIndex((current) => (current + 1) % slides.length);
@@ -148,6 +154,7 @@ export function HeroCardTall({ image, slides: slidesProp, className }: HeroCardT
     }, TALL_CAROUSEL_INTERVAL_MS);
 
     return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
       clearInterval(timer);
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     };
@@ -167,11 +174,18 @@ export function HeroCardTall({ image, slides: slidesProp, className }: HeroCardT
       <div className="relative h-full w-full overflow-hidden">
         {slides.map((slide, slideIndex) => {
           const isActive = slideIndex === activeIndex;
+          const isAdjacent =
+            slides.length > 1 &&
+            (slideIndex === (activeIndex + 1) % slides.length ||
+              slideIndex === (activeIndex - 1 + slides.length) % slides.length);
+          if (!isActive && !isAdjacent) return null;
+
           return (
             <motion.img
               key={`${slide.image}-${slideIndex}`}
               src={slide.image}
               alt=""
+              loading={isActive ? "eager" : "lazy"}
               className="absolute inset-0 h-full w-full object-cover"
               initial={false}
               animate={{

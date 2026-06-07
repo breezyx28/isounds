@@ -106,7 +106,9 @@ export default defineConfig({
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-redux": ["@reduxjs/toolkit", "react-redux"],
-          "vendor-motion": ["framer-motion"],
+          "vendor-motion": ["motion"],
+          "vendor-three": ["three", "@react-three/fiber"],
+          "vendor-gsap": ["gsap"],
           "vendor-icons": ["@phosphor-icons/react", "iconsax-react"],
           "vendor-radix": [
             "@radix-ui/react-dialog",

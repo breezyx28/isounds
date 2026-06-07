@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useLoginUserMutation, useLazyCheckSubscriptionQuery } from "@/store/api";
+import { useExchangeSessionMutation } from "@/store/localApi";
 import { useAppDispatch } from "@/store/hooks";
 import {
   setAuthUser,
@@ -40,6 +41,9 @@ export function SubscriptionChecker({ onResolved }: SubscriptionCheckerProps) {
   const location = useLocation();
   const [triggerCheck] = useLazyCheckSubscriptionQuery();
   const [loginUser] = useLoginUserMutation();
+  const [exchangeSession] = useExchangeSessionMutation();
+  const onResolvedRef = useRef(onResolved);
+  onResolvedRef.current = onResolved;
 
   const msisdnFromUrl = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -64,13 +68,13 @@ export function SubscriptionChecker({ onResolved }: SubscriptionCheckerProps) {
       if (!effectiveMsisdn && fallbackUser?.token) {
         dispatch(setAuthUser(fallbackUser));
         dispatch(setSubscriberInfo(fallbackSubscriberInfo));
-        onResolved();
+        onResolvedRef.current();
         return;
       }
 
       if (!effectiveMsisdn) {
         dispatch(setGuest(undefined));
-        onResolved();
+        onResolvedRef.current();
         return;
       }
 
@@ -88,6 +92,7 @@ export function SubscriptionChecker({ onResolved }: SubscriptionCheckerProps) {
 
         const user: AuthUser = { token, msisdn: effectiveMsisdn };
         writeStoredUser(user);
+        await exchangeSession({ token, msisdn: effectiveMsisdn }).unwrap();
         dispatch(
           setSubscribed({
             user,
@@ -104,14 +109,14 @@ export function SubscriptionChecker({ onResolved }: SubscriptionCheckerProps) {
           dispatch(setExpired({ error: String(error) }));
         }
       } finally {
-        if (active) onResolved();
+        if (active) onResolvedRef.current();
       }
     }
     void run();
     return () => {
       active = false;
     };
-  }, [dispatch, loginUser, msisdnFromUrl, onResolved, triggerCheck]);
+  }, [dispatch, exchangeSession, loginUser, msisdnFromUrl, triggerCheck]);
 
   return null;
 }

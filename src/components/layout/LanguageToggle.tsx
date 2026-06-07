@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { applyDocumentLanguage } from "@/i18n";
 import {
@@ -21,10 +21,11 @@ export function LanguageToggle({ className }: { className?: string }) {
   const toggle = () => {
     const next: Language = language === "ar" ? "en" : "ar";
     dispatch(setLanguage(next));
-    applyDocumentLanguage(next);
-    if (authStatus === "subscribed") {
-      void savePreference({ key: "lang", value: next });
-    }
+    void applyDocumentLanguage(next).then(() => {
+      if (authStatus === "subscribed") {
+        void savePreference({ key: "lang", value: next });
+      }
+    });
   };
 
   const otherLanguage = language === "ar" ? "en" : "ar";

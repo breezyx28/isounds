@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Category as CategoryIcon } from "iconsax-react";
 import { ArrowUpRight, ClockCounterClockwise, Eye, Heart, Sparkle } from "@phosphor-icons/react";
-import { motion, useReducedMotion } from "framer-motion";
-import { useGetCategoriesQuery, useGetTopPodcastsQuery } from "@/store/api";
+import { motion, useReducedMotion } from "motion/react";
+import { useGetCategoriesQuery } from "@/store/api";
+import { useTopicChipCounts } from "@/hooks/useTopicChipCounts";
 import { FrostGlassChip } from "@/components/ui/frost-glass-chip";
 import { LandingCategoryCard } from "./LandingCategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,11 +47,6 @@ function buildGridItems(categories: Category[]): GridItem[] {
   }
 
   return items.slice(0, 9);
-}
-
-function resolveCount(value: number | undefined): number {
-  if (!value || value <= 0) return 10;
-  return value;
 }
 
 function TopicCard({
@@ -120,9 +116,7 @@ export function LandingCategoriesSection({ className }: { className?: string }) 
   const reducedMotion = useReducedMotion() ?? false;
   const { data: categories = [], isLoading, isError, refetch } =
     useGetCategoriesQuery();
-  const { data: latest = [] } = useGetTopPodcastsQuery({ criteria: "latest" });
-  const { data: liked = [] } = useGetTopPodcastsQuery({ criteria: "liked" });
-  const { data: viewed = [] } = useGetTopPodcastsQuery({ criteria: "viewed" });
+  const topicCounts = useTopicChipCounts();
 
   const gridItems = useMemo(() => buildGridItems(categories), [categories]);
 
@@ -195,7 +189,7 @@ export function LandingCategoriesSection({ className }: { className?: string }) 
                     <TopicCard
                       label={t("sections.latest")}
                       description={t("landing.categories.topicCards.latest")}
-                      count={resolveCount(latest.length)}
+                      count={topicCounts.latest}
                       to="/explore?sort=latest"
                       className="bg-[#eaf0ff] text-[#2a3a77]"
                       icon={<ClockCounterClockwise className="h-4 w-4" weight="bold" />}
@@ -207,7 +201,7 @@ export function LandingCategoriesSection({ className }: { className?: string }) 
                     <TopicCard
                       label={t("sections.liked")}
                       description={t("landing.categories.topicCards.liked")}
-                      count={resolveCount(liked.length)}
+                      count={topicCounts.liked}
                       to="/explore?sort=liked"
                       className="bg-[#ffeaf3] text-[#6a2345]"
                       icon={<Heart className="h-4 w-4" weight="fill" />}
@@ -219,7 +213,7 @@ export function LandingCategoriesSection({ className }: { className?: string }) 
                     <TopicCard
                       label={t("sections.viewed")}
                       description={t("landing.categories.topicCards.viewed")}
-                      count={resolveCount(viewed.length)}
+                      count={topicCounts.viewed}
                       to="/explore?sort=viewed"
                       className="bg-[#e7fff2] text-[#1d5a3a]"
                       icon={<Eye className="h-4 w-4" weight="bold" />}

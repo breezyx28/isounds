@@ -9,7 +9,12 @@ import {
 } from "../zoalcast";
 
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS ?? 30 * 60 * 1000);
+const FIRST_POLL_DELAY_MS = 15_000;
 const SEND_CONCURRENCY = 20;
+const SEED_STATE_KEY = "seeding";
+const LAST_POLL_STATE_KEY = "last_episode_poll";
+
+let pollInFlight = false;
 
 type PushTarget = {
   id: number;
@@ -48,61 +53,54 @@ function markNotified(db: Database, podcastId: number, categoryId: number) {
   );
 }
 
-function shouldNotifyUser(
-  db: Database,
-  msisdn: string,
-  categoryId: number,
-): boolean {
-  const settings = db
-    .query(
-      "SELECT hidden, push_enabled FROM category_settings WHERE msisdn = ? AND category_id = ?",
-    )
-    .get(msisdn, categoryId) as { hidden: number; push_enabled: number } | null;
-
-  if (settings?.hidden === 1) return false;
-  if (settings && settings.push_enabled === 0) return false;
-
-  const affinity = db
-    .query(
-      "SELECT score FROM category_affinities WHERE msisdn = ? AND category_id = ?",
-    )
-    .get(msisdn, categoryId) as { score?: number } | null;
-
-  if (settings?.push_enabled === 1) return true;
-  return (affinity?.score ?? 0) >= AFFINITY_PUSH_THRESHOLD;
-}
-
 function getPushTargets(db: Database, categoryId: number): PushTarget[] {
-  const subs = db
-    .query("SELECT id, msisdn, endpoint, p256dh, auth FROM push_subscriptions")
-    .all() as PushTarget[];
-
-  return subs.filter((sub) => shouldNotifyUser(db, sub.msisdn, categoryId));
+  return db
+    .query(
+      `SELECT ps.id, ps.msisdn, ps.endpoint, ps.p256dh, ps.auth
+       FROM push_subscriptions ps
+       LEFT JOIN category_settings cs
+         ON cs.msisdn = ps.msisdn AND cs.category_id = ?
+       LEFT JOIN category_affinities ca
+         ON ca.msisdn = ps.msisdn AND ca.category_id = ?
+       WHERE COALESCE(cs.hidden, 0) = 0
+         AND (
+           cs.push_enabled = 1
+           OR (COALESCE(cs.push_enabled, 1) = 1 AND COALESCE(ca.score, 0) >= ?)
+         )`,
+    )
+    .all(categoryId, categoryId, AFFINITY_PUSH_THRESHOLD) as PushTarget[];
 }
 
 async function sendBatch(
   db: Database,
   targets: PushTarget[],
   payload: ReturnType<typeof buildNewEpisodePayload>,
-) {
+): Promise<number> {
+  let successCount = 0;
+
   for (let i = 0; i < targets.length; i += SEND_CONCURRENCY) {
     const batch = targets.slice(i, i + SEND_CONCURRENCY);
-    await Promise.all(
+    const results = await Promise.all(
       batch.map(async (target) => {
         const result = await sendPushNotification(target, payload);
         if (result.gone) {
           db.run("DELETE FROM push_subscriptions WHERE id = ?", [target.id]);
-          return;
+          return false;
         }
         if (result.ok) {
           db.run(
             "UPDATE push_subscriptions SET last_used_at = unixepoch() WHERE id = ?",
             [target.id],
           );
+          return true;
         }
+        return false;
       }),
     );
+    successCount += results.filter(Boolean).length;
   }
+
+  return successCount;
 }
 
 async function processNewEpisode(
@@ -115,10 +113,9 @@ async function processNewEpisode(
 
   upsertPodcastCache(db, { ...podcast, category_id: categoryId });
   const targets = getPushTargets(db, categoryId);
-  if (targets.length === 0) {
-    markNotified(db, podcast.id, categoryId);
-    return;
-  }
+
+  // S-11: do not mark episodes with no eligible subscribers — retry when users subscribe.
+  if (targets.length === 0) return;
 
   const msisdnLang = new Map<string, "ar" | "en">();
   for (const target of targets) {
@@ -138,6 +135,7 @@ async function processNewEpisode(
     byLang.set(lang, list);
   }
 
+  let totalSuccesses = 0;
   for (const [lang, langTargets] of byLang) {
     const payload = buildNewEpisodePayload(
       lang,
@@ -146,13 +144,20 @@ async function processNewEpisode(
       podcast.id,
       podcast.image,
     );
-    await sendBatch(db, langTargets, payload);
+    totalSuccesses += await sendBatch(db, langTargets, payload);
   }
 
-  markNotified(db, podcast.id, categoryId);
+  if (totalSuccesses > 0) {
+    markNotified(db, podcast.id, categoryId);
+  }
 }
 
 export async function runNewEpisodePoll(db: Database) {
+  if (getPollState(db, SEED_STATE_KEY) === "1") {
+    console.log("[poller] Skipping poll — seed in progress");
+    return;
+  }
+
   const categories = await fetchCategories();
   const globalLatest = await fetchLatestPodcasts();
   const seen = new Set<number>();
@@ -166,17 +171,57 @@ export async function runNewEpisodePoll(db: Database) {
     await processNewEpisode(db, podcast, categoryId);
   }
 
-  for (const category of categories) {
-    const latest = await fetchLatestPodcasts(category.id);
-    for (const podcast of latest) {
-      if (!podcast.id || seen.has(podcast.id)) continue;
-      seen.add(podcast.id);
-      if (isAlreadyNotified(db, podcast.id)) continue;
-      await processNewEpisode(db, podcast, category.id, category.name);
+  const CATEGORY_FETCH_CONCURRENCY = 5;
+  for (let i = 0; i < categories.length; i += CATEGORY_FETCH_CONCURRENCY) {
+    const chunk = categories.slice(i, i + CATEGORY_FETCH_CONCURRENCY);
+    const latestByCategory = await Promise.all(
+      chunk.map(async (category) => ({
+        category,
+        latest: await fetchLatestPodcasts(category.id),
+      })),
+    );
+
+    for (const { category, latest } of latestByCategory) {
+      for (const podcast of latest) {
+        if (!podcast.id || seen.has(podcast.id)) continue;
+        seen.add(podcast.id);
+        if (isAlreadyNotified(db, podcast.id)) continue;
+        await processNewEpisode(db, podcast, category.id, category.name);
+      }
     }
   }
 
-  setPollState(db, "last_episode_poll", String(Date.now()));
+  setPollState(db, LAST_POLL_STATE_KEY, String(Date.now()));
+}
+
+async function seedAllExistingAsNotified(db: Database) {
+  setPollState(db, SEED_STATE_KEY, "1");
+
+  try {
+    const seen = new Set<number>();
+    const podcasts = await fetchLatestPodcasts();
+    for (const podcast of podcasts) {
+      if (!podcast.id || seen.has(podcast.id)) continue;
+      seen.add(podcast.id);
+      const categoryId = podcast.category_id ?? 0;
+      if (categoryId) markNotified(db, podcast.id, categoryId);
+    }
+
+    const categories = await fetchCategories();
+    for (const cat of categories) {
+      const latest = await fetchLatestPodcasts(cat.id);
+      for (const podcast of latest) {
+        if (!podcast.id || seen.has(podcast.id)) continue;
+        seen.add(podcast.id);
+        markNotified(db, podcast.id, cat.id);
+      }
+    }
+
+    setPollState(db, LAST_POLL_STATE_KEY, String(Date.now()));
+    console.log("[poller] Seeded notified_episodes baseline");
+  } finally {
+    setPollState(db, SEED_STATE_KEY, "0");
+  }
 }
 
 export function startNewEpisodePoller(db: Database) {
@@ -187,33 +232,29 @@ export function startNewEpisodePoller(db: Database) {
   }
 
   const tick = () => {
-    void runNewEpisodePoll(db).catch((error) => {
-      console.error("[poller] Episode poll failed:", error);
-    });
+    if (pollInFlight) {
+      console.log("[poller] Skipping tick — previous poll still in flight");
+      return;
+    }
+
+    pollInFlight = true;
+    void runNewEpisodePoll(db)
+      .catch((error) => {
+        console.error("[poller] Episode poll failed:", error);
+      })
+      .finally(() => {
+        pollInFlight = false;
+      });
   };
 
-  const last = getPollState(db, "last_episode_poll");
-  if (!last) {
-    void (async () => {
-      const podcasts = await fetchLatestPodcasts();
-      for (const podcast of podcasts) {
-        if (!podcast.id) continue;
-        const categoryId = podcast.category_id ?? 0;
-        if (categoryId) markNotified(db, podcast.id, categoryId);
-      }
-      const categories = await fetchCategories();
-      for (const cat of categories) {
-        const latest = await fetchLatestPodcasts(cat.id);
-        for (const podcast of latest) {
-          if (podcast.id) markNotified(db, podcast.id, cat.id);
-        }
-      }
-      setPollState(db, "last_episode_poll", String(Date.now()));
-      console.log("[poller] Seeded notified_episodes baseline");
-    })();
-  }
+  void (async () => {
+    const last = getPollState(db, LAST_POLL_STATE_KEY);
+    if (!last) {
+      await seedAllExistingAsNotified(db);
+    }
 
-  setTimeout(tick, 15_000);
-  setInterval(tick, POLL_INTERVAL_MS);
-  console.log(`[poller] Episode poller started (every ${POLL_INTERVAL_MS / 1000}s)`);
+    setTimeout(tick, FIRST_POLL_DELAY_MS);
+    setInterval(tick, POLL_INTERVAL_MS);
+    console.log(`[poller] Episode poller started (every ${POLL_INTERVAL_MS / 1000}s)`);
+  })();
 }

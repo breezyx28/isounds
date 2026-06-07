@@ -15,6 +15,7 @@ export const zoalcastApi = createApi({
     },
   }),
   tagTypes: ["Podcast", "Category", "Likes"],
+  refetchOnFocus: false,
   endpoints: (builder) => ({
     getCategories: builder.query<Category[], void>({
       query: () => `/portal/${PORTAL_ID}/categories`,
@@ -31,7 +32,15 @@ export const zoalcastApi = createApi({
         if (categoryId) params.set("category_id", String(categoryId));
         return `/podcast/${PORTAL_ID}/top?${params.toString()}`;
       },
-      transformResponse: (response: { data: Podcast[] }) => response.data ?? [],
+      transformResponse: (response: unknown) => {
+        if (Array.isArray(response)) return response;
+        if (response && typeof response === "object" && "data" in response) {
+          const data = (response as { data?: unknown }).data;
+          return Array.isArray(data) ? data : [];
+        }
+        return [];
+      },
+      keepUnusedDataFor: 3600,
       providesTags: ["Podcast"],
     }),
     getCategoryPodcasts: builder.query<
@@ -55,11 +64,13 @@ export const zoalcastApi = createApi({
         lastPage: response.meta?.last_page ?? 1,
         totalPodcasts: response.total_podcasts,
       }),
+      keepUnusedDataFor: 3600,
       providesTags: ["Podcast"],
     }),
     getPodcastDetail: builder.query<Podcast, number>({
       query: (id) => `/podcast/${id}`,
       transformResponse: (response: { data: Podcast }) => response.data,
+      keepUnusedDataFor: 3600,
       providesTags: (_r, _e, id) => [{ type: "Podcast", id }],
     }),
     searchPodcasts: builder.query<
@@ -123,22 +134,6 @@ export const zoalcastApi = createApi({
         { type: "Podcast", id: podcastId },
       ],
     }),
-    checkLike: builder.query<boolean, number>({
-      query: (podcastId) => ({
-        url: "/podcast/like",
-        method: "POST",
-        body: { podcast_id: podcastId },
-      }),
-      transformResponse: (response: unknown) => {
-        if (typeof response === "boolean") return response;
-        if (typeof response === "object" && response !== null) {
-          const candidate = response as { liked?: boolean; data?: { liked?: boolean } };
-          return Boolean(candidate.liked ?? candidate.data?.liked);
-        }
-        return false;
-      },
-      providesTags: ["Likes"],
-    }),
     incrementViews: builder.mutation<{ success: boolean }, number>({
       query: (podcastId) => ({
         url: `/podcast/${PORTAL_ID}/increment_views`,
@@ -179,7 +174,6 @@ export const {
   useGetLikedPodcastsQuery,
   useLikePodcastMutation,
   useUnlikePodcastMutation,
-  useCheckLikeQuery,
   useIncrementViewsMutation,
   useCheckSubscriptionQuery,
   useLazyCheckSubscriptionQuery,

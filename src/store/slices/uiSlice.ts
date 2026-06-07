@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { getStoredLanguage } from "@/lib/language";
 import type { Theme } from "@/lib/theme";
 
 export type Language = "ar" | "en";
@@ -9,11 +10,7 @@ interface UiState {
   mobileDrawerOpen: boolean;
 }
 
-const getInitialLanguage = (): Language => {
-  const stored = localStorage.getItem("lang");
-  if (stored === "ar" || stored === "en") return stored;
-  return "ar";
-};
+const getInitialLanguage = (): Language => getStoredLanguage();
 
 const getInitialTheme = (): Theme => "light";
 

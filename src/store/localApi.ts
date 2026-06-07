@@ -1,11 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { getSubscriberMsisdn, isSubscribed } from "@/lib/localIdentity";
+import { getOrCreateSessionId, getSubscriberMsisdn, isSubscribed } from "@/lib/localIdentity";
 import type { RootState } from "./store";
 
 export const localApi = createApi({
   reducerPath: "localApi",
   baseQuery: fetchBaseQuery({
     baseUrl: "/api/local",
+    credentials: "include",
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as RootState;
       const msisdn = getSubscriberMsisdn(state);
@@ -26,6 +27,22 @@ export const localApi = createApi({
     "Push",
   ],
   endpoints: (builder) => ({
+    exchangeSession: builder.mutation<
+      { ok: boolean; msisdn: string; subscribed: boolean },
+      { token: string; msisdn: string }
+    >({
+      query: (body) => ({
+        url: "/auth/session",
+        method: "POST",
+        body,
+      }),
+    }),
+    clearSession: builder.mutation<{ ok: boolean }, void>({
+      query: () => ({
+        url: "/auth/session",
+        method: "DELETE",
+      }),
+    }),
     getPreferences: builder.query<Record<string, string>, void>({
       query: () => "/preferences",
     }),
@@ -119,7 +136,7 @@ export const localApi = createApi({
       query: (body) => ({
         url: "/listening-history",
         method: "POST",
-        body,
+        body: { ...body, session_id: getOrCreateSessionId() },
       }),
       invalidatesTags: (_result, _error, args) => [
         { type: "ListeningHistory", id: args.podcast_id },
@@ -327,6 +344,8 @@ export const localApi = createApi({
 export const {
   useGetPreferencesQuery,
   useSavePreferencesMutation,
+  useExchangeSessionMutation,
+  useClearSessionMutation,
   useSavePreferenceMutation,
   useGetBookmarksQuery,
   useAddBookmarkMutation,

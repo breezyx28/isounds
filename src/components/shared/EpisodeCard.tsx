@@ -21,11 +21,7 @@ import { EpisodeDurationBadge } from "@/components/episode/EpisodeDurationBadge"
 import { EpisodeTypeBadge } from "@/components/episode/EpisodeTypeBadge";
 import { formatRelativeDate, formatYoutubeStats } from "@/lib/format";
 import { useAppSelector } from "@/store/hooks";
-import {
-  useCheckLikeQuery,
-  useLikePodcastMutation,
-  useUnlikePodcastMutation,
-} from "@/store/api";
+import { useLikePodcastMutation, useUnlikePodcastMutation } from "@/store/api";
 import type { Podcast } from "@/types/podcast";
 import { cn } from "@/lib/utils";
 
@@ -76,17 +72,14 @@ function EpisodeCutoutCard({
       ? `${window.location.origin}/podcasts/${podcast.id}`
       : `/podcasts/${podcast.id}`;
 
-  const { data: likedState } = useCheckLikeQuery(podcast.id, {
-    skip: !isSubscribed,
-  });
-  const [liked, setLiked] = useState(Boolean(podcast.liked ?? likedState));
+  const [liked, setLiked] = useState(Boolean(podcast.liked));
   const { bookmarked, toggleBookmark } = useBookmark(podcast.id);
   const [likePodcast] = useLikePodcastMutation();
   const [unlikePodcast] = useUnlikePodcastMutation();
 
   useEffect(() => {
-    if (likedState !== undefined) setLiked(Boolean(likedState));
-  }, [likedState]);
+    setLiked(Boolean(podcast.liked));
+  }, [podcast.liked, podcast.id]);
 
   const statsLine = formatYoutubeStats(
     podcast.views ?? 0,

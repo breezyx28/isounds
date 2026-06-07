@@ -1,20 +1,21 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { Pause, Play, X } from "@phosphor-icons/react";
 import { useTranslation } from "react-i18next";
-import { usePlayer } from "@/features/player/usePlayer";
+import { usePlayerProgress, usePlayerTransport } from "@/features/player/usePlayer";
 
 export function MiniPlayer() {
   const { t } = useTranslation("player");
-  const { player, play, pause, dismiss, openEpisode } = usePlayer();
+  const { currentEpisode, isPlaying, showMiniPlayer, play, pause, dismiss, openEpisode } =
+    usePlayerTransport();
+  const { progress, duration } = usePlayerProgress();
 
-  if (!player.currentEpisode) return null;
+  if (!currentEpisode) return null;
 
-  const progressPercent =
-    player.duration > 0 ? (player.progress / player.duration) * 100 : 0;
+  const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
   return (
     <AnimatePresence>
-      {player.showMiniPlayer && (
+      {showMiniPlayer && (
         <motion.div
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -24,28 +25,26 @@ export function MiniPlayer() {
         >
           <div
             className="mx-auto flex h-[72px] max-w-7xl cursor-pointer items-center gap-3 px-4 md:h-20 md:px-8 xl:px-16"
-            onClick={() => openEpisode(player.currentEpisode!.id)}
+            onClick={() => openEpisode(currentEpisode.id)}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                openEpisode(player.currentEpisode!.id);
+                openEpisode(currentEpisode.id);
               }
             }}
             aria-label={t("openMiniPlayerEpisode")}
           >
             <img
-              src={player.currentEpisode.image ?? "/logo.png"}
-              alt={player.currentEpisode.name}
+              src={currentEpisode.image ?? "/logo.png"}
+              alt={currentEpisode.name}
               width={40}
               height={40}
               className="h-10 w-10 rounded-md object-cover"
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-body-md text-text">
-                {player.currentEpisode.name}
-              </p>
+              <p className="truncate text-body-md text-text">{currentEpisode.name}</p>
               <div className="mt-1 h-1 w-full rounded-full bg-border">
                 <div
                   className="h-1 rounded-full bg-primary"
@@ -57,13 +56,13 @@ export function MiniPlayer() {
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
-                if (player.isPlaying) pause();
+                if (isPlaying) pause();
                 else play();
               }}
               className="rounded-md border border-border p-2 text-text"
-              aria-label={player.isPlaying ? t("pause") : t("play")}
+              aria-label={isPlaying ? t("pause") : t("play")}
             >
-              {player.isPlaying ? <Pause weight="fill" /> : <Play weight="fill" />}
+              {isPlaying ? <Pause weight="fill" /> : <Play weight="fill" />}
             </button>
             <button
               type="button"

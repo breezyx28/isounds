@@ -102,6 +102,7 @@ function VelocityText({
   );
 
   const copyRef = useRef<HTMLSpanElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const copyWidth = useElementWidth(copyRef);
   const directionFactor = useRef(1);
 
@@ -111,6 +112,8 @@ function VelocityText({
   });
 
   useAnimationFrame((_time, delta) => {
+    if (document.hidden) return;
+
     let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
     const factor = velocityFactor.get();
 
@@ -134,7 +137,7 @@ function VelocityText({
   }
 
   return (
-    <div className={parallaxClassName} style={parallaxStyle}>
+    <div ref={containerRef} className={parallaxClassName} style={parallaxStyle}>
       <motion.div className={scrollerClassName} style={{ x, ...scrollerStyle }}>
         {spans}
       </motion.div>

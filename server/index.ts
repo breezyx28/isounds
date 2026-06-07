@@ -17,6 +17,9 @@ const dbDir = dirname(DB_PATH);
 if (!existsSync(dbDir)) mkdirSync(dbDir, { recursive: true });
 
 const db = new Database(DB_PATH, { create: true });
+db.run("PRAGMA journal_mode = WAL");
+db.run("PRAGMA busy_timeout = 5000");
+db.run("PRAGMA synchronous = NORMAL");
 runMigrations(db);
 configureWebPush();
 startNewEpisodePoller(db);

@@ -55,7 +55,7 @@ export function EpisodeMediaStage({
 }: EpisodeMediaStageProps) {
   const { t } = useTranslation("player");
   const navigate = useNavigate();
-  const { player, play, pause, seek, playEpisode } = usePlayer();
+  const { player, play, pause, seek, playEpisode, prepareEpisode } = usePlayer();
   const { bookmarked, toggleBookmark } = useBookmark(podcast.id);
 
   const imageUrl = podcast.image ?? "/logo.png";
@@ -69,9 +69,9 @@ export function EpisodeMediaStage({
   useEffect(() => {
     if (!isSubscribed || isVideo) return;
     if (player.currentEpisode?.id !== podcast.id) {
-      playEpisode(podcast);
+      prepareEpisode(podcast);
     }
-  }, [isSubscribed, isVideo, playEpisode, player.currentEpisode?.id, podcast]);
+  }, [isSubscribed, isVideo, prepareEpisode, player.currentEpisode?.id, podcast]);
 
   const handlePlay = useCallback(() => {
     if (!isSubscribed) {

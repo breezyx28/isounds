@@ -5,52 +5,43 @@ import { LandingCategoriesSection } from "@/components/sections/landing/LandingC
 import { LandingFeaturesSection } from "@/components/sections/landing/LandingFeaturesSection";
 import { LandingHeroSection } from "@/components/sections/landing/LandingHeroSection";
 import { LandingScrollMarqueeSection } from "@/components/sections/landing/LandingScrollMarqueeSection";
-import {
-  LandingPageLoader,
-  LANDING_LOADER_MS,
-} from "@/components/landing/LandingPageLoader";
+import { LandingPageLoader } from "@/components/landing/LandingPageLoader";
+import { useTopicChipCounts } from "@/hooks/useTopicChipCounts";
+
+const LANDING_SEEN_KEY = "landing_seen";
+const LOADER_OVERLAY_MS = 400;
 
 export default function LandingPage() {
   const prefersReducedMotion = useReducedMotion();
-  const [showLoader, setShowLoader] = useState(!prefersReducedMotion);
-  const [contentReady, setContentReady] = useState(prefersReducedMotion);
+  const [showLoader, setShowLoader] = useState(false);
+  useTopicChipCounts();
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      setShowLoader(false);
-      setContentReady(true);
-      return;
-    }
+    if (prefersReducedMotion) return;
+
+    const seen = sessionStorage.getItem(LANDING_SEEN_KEY);
+    if (seen) return;
 
     setShowLoader(true);
-    setContentReady(false);
+    sessionStorage.setItem(LANDING_SEEN_KEY, "1");
 
-    const revealTimer = window.setTimeout(() => {
-      setContentReady(true);
-    }, LANDING_LOADER_MS);
-
-    const hideLoaderTimer = window.setTimeout(() => {
+    const hideTimer = window.setTimeout(() => {
       setShowLoader(false);
-    }, LANDING_LOADER_MS + 120);
+    }, LOADER_OVERLAY_MS);
 
-    return () => {
-      window.clearTimeout(revealTimer);
-      window.clearTimeout(hideLoaderTimer);
-    };
+    return () => window.clearTimeout(hideTimer);
   }, [prefersReducedMotion]);
 
   return (
     <>
       <LandingPageLoader visible={showLoader} />
-      {contentReady ? (
-        <div className="relative bg-bg text-text">
-          <LandingHeroSection />
-          <LandingScrollMarqueeSection />
-          <LandingFeaturesSection />
-          <LandingCategoriesSection />
-          <LandingAboutSection />
-        </div>
-      ) : null}
+      <div className="relative bg-bg text-text">
+        <LandingHeroSection />
+        <LandingScrollMarqueeSection />
+        <LandingFeaturesSection />
+        <LandingCategoriesSection />
+        <LandingAboutSection />
+      </div>
     </>
   );
 }

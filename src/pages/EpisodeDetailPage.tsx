@@ -12,7 +12,6 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { StarRating } from "@/components/shared/StarRating";
 import { ComplaintModal } from "@/components/shared/ComplaintModal";
 import {
-  useCheckLikeQuery,
   useGetPodcastDetailQuery,
   useGetTopPodcastsQuery,
   useLikePodcastMutation,
@@ -58,9 +57,6 @@ export default function EpisodeDetailPage() {
   } = useGetPodcastDetailQuery(podcastId, {
     skip: !podcastId || Number.isNaN(podcastId),
   });
-  const { data: likedState } = useCheckLikeQuery(podcastId, {
-    skip: !isSubscribed || !podcastId || Number.isNaN(podcastId),
-  });
   const { data: listeningPosition } = useGetListeningPositionQuery(podcastId, {
     skip: !podcastId || Number.isNaN(podcastId),
   });
@@ -80,9 +76,9 @@ export default function EpisodeDetailPage() {
 
   useEffect(() => {
     if (!podcast) return;
-    setLiked(Boolean(podcast.liked ?? likedState));
+    setLiked(Boolean(podcast.liked));
     setLikesCount(podcast.likes ?? 0);
-  }, [likedState, podcast]);
+  }, [podcast]);
 
   const filteredRelated = useMemo(
     () => relatedData.filter((item) => item.id !== podcastId),
